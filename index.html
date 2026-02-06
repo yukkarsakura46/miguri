@@ -248,27 +248,28 @@
     }
 
     function autoSave() {
-        if(!currentRecordId) return;
-        const db = getDB();
-        const idx = db.findIndex(r => r.id === currentRecordId);
-        if(idx === -1) return;
-        
-        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+    if(!currentRecordId) return;
+    const db = getDB();
+    const idx = db.findIndex(r => r.id === currentRecordId);
+    if(idx === -1) return;
+    
+    const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
 
-        db[idx] = {
-            ...db[idx],
-            name: getVal('input-name'),
-            single: getVal('input-single'),
-            nick: getVal('input-nick'),
-            date: getVal('input-date'),
-            part: getVal('input-part'),
-            cards: getVal('input-cards'),
-            seconds: getVal('input-seconds'),
-            chats: document.getElementById('chat-list').innerHTML,
-            mAv, fAv
-        };
-        saveDB(db);
-    }
+    db[idx] = {
+        ...db[idx],
+        name: getVal('input-name'),
+        single: getVal('input-single'),
+        nick: getVal('input-nick'),
+        date: getVal('input-date'),
+        part: getVal('input-part'),
+        cards: getVal('input-cards'),
+        seconds: getVal('input-seconds'),
+        chats: document.getElementById('chat-list').innerHTML,
+        mAv: mAv, 
+        fAv: fAv  
+    };
+    saveDB(db);
+}
 
     function liveUpdate() {
         const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
@@ -352,10 +353,17 @@
     };
 
     function confirmCrop() {
-        if(uploadTarget === 'member') { mAv = rawI.src; document.getElementById('prev-img-member').src = mAv; } 
-        else { fAv = rawI.src; }
-        closeCrop(); autoSave();
+    const imgData = rawI.src; // 取得裁切後的圖片數據
+    if (uploadTarget === 'member') {
+        mAv = imgData; // 更新成員頭像變數
+        document.getElementById('prev-img-member').src = mAv;
+    } else {
+        fAv = imgData; // 更新我的頭像變數
     }
+    
+    closeCrop();
+    autoSave(); // 關鍵：裁切完立即執行存檔，將圖片字串寫入資料庫
+}
     function closeCrop() { document.getElementById('crop-modal').style.display='none'; }
 
     function openDrawer(id) { document.getElementById('overlay').style.display='block'; document.getElementById(id).classList.add('active'); }
@@ -376,7 +384,7 @@
         });
     }
 
-    window.onload = renderRecordList;
+    document.addEventListener('DOMContentLoaded', renderRecordList);
 </script>
 
 </body>
