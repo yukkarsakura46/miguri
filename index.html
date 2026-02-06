@@ -237,20 +237,17 @@
     }
 
     function backToDash() {
-    try {
-        autoSave(); // 嘗試存檔
-    } catch (e) {
-        console.warn("存檔失敗（可能是圖片太大）：", e);
-        // 如果是因為空間不足，可以提示使用者刪除舊紀錄
-    }
-
-    // 強制切換視窗
+    // 先執行存檔
+    autoSave();
+    
+    // 強制切換 class，確保畫面一定會跳轉
     const editView = document.getElementById('edit-view');
     const dashView = document.getElementById('main-dashboard');
     
     if (editView && dashView) {
         editView.classList.remove('active');
         dashView.classList.add('active');
+        // 渲染包含「單曲名稱」的主畫面清單
         renderRecordList(); 
     }
 }
@@ -361,19 +358,51 @@
     };
 
     function confirmCrop() {
-    const imgData = rawI.src; 
-    if(uploadTarget === 'member') { 
-        mAv = imgData; 
-        document.getElementById('prev-img-member').src = mAv; 
-    } else { 
-        fAv = imgData; 
+    // 1. 建立畫布來進行壓縮
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // 設定壓縮後的目標尺寸 (建議 200~300px，既清晰又省空間)
+    const targetSize = 200;
+    canvas.width = targetSize;
+    canvas.height = targetSize;
+
+    // 計算原始圖片在裁切框中的縮放比例與位移
+    const img = document.getElementById('preview-img-raw');
+    const rect = img.getBoundingClientRect();
+    const viewport = document.querySelector('.crop-viewport').getBoundingClientRect();
+
+    // 取得圖片在畫布上的相對位置
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
+    
+    const x = (viewport.left - rect.left) * scaleX;
+    const y = (viewport.top - rect.top) * scaleY;
+    const width = viewport.width * scaleX;
+    const height = viewport.height * scaleY;
+
+    // 2. 繪製到畫布並縮小
+    ctx.drawImage(img, x, y, width, height, 0, 0, targetSize, targetSize);
+
+    // 3. 輸出壓縮後的 Base64 (品質設定為 0.7 效果最好)
+    const compressedData = canvas.toDataURL("image/jpeg", 0.7);
+
+    // 4. 存入變數並更新預覽
+    if (uploadTarget === 'member') {
+        mAv = compressedData;
+        document.getElementById('prev-img-member').src = mAv;
+    } else {
+        fAv = compressedData;
     }
+
     closeCrop();
     
-    // 延遲存檔，避免阻塞 UI 動畫
-    setTimeout(() => {
+    // 5. 立即執行存檔，確保資料寫入 localStorage
+    try {
         autoSave();
-    }, 100);
+    } catch (e) {
+        console.error("存檔失敗，請嘗試刪除部分舊紀錄", e);
+    }
 }
     function closeCrop() { document.getElementById('crop-modal').style.display='none'; }
 
