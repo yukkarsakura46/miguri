@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakurazaka46 紀錄產生器 V6</title>
+    <title>Sakurazaka46 紀錄庫 V7</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; background: #eee; margin: 0; }
 
-        /* 主預覽區 */
+        /* 預覽區佈局 */
         #capture-area { 
             width: 100vw; min-height: 100vh; background: white; padding: 25px 15px 100px; 
             position: relative; display: flex; flex-direction: column; overflow: hidden;
@@ -18,25 +18,20 @@
         #bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: 0; background-size: cover; background-position: center; pointer-events: none; }
         .content-layer { position: relative; z-index: 1; flex-grow: 1; }
 
-        /* 頂部資訊：置中佈局 */
+        /* 頂部置中資訊 */
         .header-center { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #f2f2f7; padding-bottom: 20px; position: relative; }
-        .avatar-wrapper { position: relative; display: inline-block; margin-bottom: 15px; }
-        .header-avatar { 
-            width: 110px; height: 110px; border-radius: 50%; object-fit: cover; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid #fff;
-            position: relative; /* 配合位移調整 */
+        .avatar-container { 
+            width: 110px; height: 110px; border-radius: 50%; overflow: hidden; 
+            margin: 0 auto 15px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
-        .header-name { font-size: 26px; font-weight: bold; margin: 0; color: #000; }
-        .header-date { font-size: 14px; color: var(--text-gray); margin-top: 5px; }
+        .header-avatar { width: 100%; height: auto; position: absolute; left: 0; top: 0; }
+        .header-name { font-size: 26px; font-weight: bold; margin: 0; color: #000; min-height: 30px; }
+        .header-date { font-size: 14px; color: var(--text-gray); margin-top: 5px; min-height: 20px; }
         .nick-label { font-size: 11px; color: #333; margin-top: 10px; }
-        .header-nick { font-size: 22px; font-weight: bold; color: var(--nick-green); margin-top: 2px; }
+        .header-nick { font-size: 22px; font-weight: bold; color: var(--nick-green); margin-top: 2px; min-height: 30px; }
         
-        /* 狀態欄：三行並列右下角 */
-        .status-corner { 
-            position: absolute; right: 0; bottom: 8px; 
-            display: flex; flex-direction: column; align-items: flex-end; 
-            gap: 2px; font-size: 12px; color: var(--text-gray); font-weight: 500;
-        }
+        .status-corner { position: absolute; right: 0; bottom: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px; color: var(--text-gray); }
 
         /* 對話列表 */
         .chat-list { display: flex; flex-direction: column; gap: 12px; }
@@ -52,9 +47,7 @@
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
         .narration { text-align: center; color: #bbb; font-size: 13px; margin: 15px 0; font-style: italic; }
-
-        /* 刪除鍵：成員對話改到右邊 */
-        .del-btn { position: absolute; top: 10px; color: #ff3b30; font-weight: bold; padding: 5px; font-size: 14px; opacity: 0.5; }
+        .del-btn { position: absolute; top: 10px; color: #ff3b30; font-weight: bold; font-size: 14px; opacity: 0.5; }
         .item-member .del-btn { right: -25px; }
         .item-fan .del-btn { left: -25px; }
 
@@ -64,10 +57,12 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 150; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 5px; border-top: 1px solid #eee; z-index: 100; }
         .nav-btn { background: none; border: none; display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #666; }
-        .nav-btn i { font-size: 22px; margin-bottom: 3px; }
         .input-row { margin-bottom: 15px; }
         .input-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 6px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; background: #fafafa; }
+        
+        /* 檔案庫列表樣式 */
+        .archive-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -76,14 +71,13 @@
     <div id="bg-overlay"></div>
     <div class="content-layer">
         <div class="header-center">
-            <div class="avatar-wrapper">
-                <img src="https://via.placeholder.com/150" id="prev-img-member" class="header-avatar" id="main-avatar">
+            <div class="avatar-container">
+                <img src="https://via.placeholder.com/150" id="prev-img-member" class="header-avatar">
             </div>
             <div id="prev-name" class="header-name"></div>
             <div id="prev-date" class="header-date"></div>
             <div class="nick-label">👤 ニックネーム</div>
             <div id="prev-nick" class="header-nick"></div>
-            
             <div class="status-corner">
                 <div id="prev-part"></div>
                 <div id="prev-cards"></div>
@@ -98,183 +92,154 @@
 
 <div class="drawer" id="configDrawer">
     <h3>⚙️ 紀錄資料設定</h3>
-    <div class="input-row"><label>成員姓名</label><input type="text" id="input-name" placeholder="請輸入" oninput="updateUI()"></div>
-    <div class="input-row"><label>你的暱稱</label><input type="text" id="input-nick" placeholder="請輸入" oninput="updateUI()"></div>
+    <div class="input-row"><label>成員姓名</label><input type="text" id="input-name" oninput="updateUI()"></div>
+    <div class="input-row"><label>你的暱稱</label><input type="text" id="input-nick" oninput="updateUI()"></div>
     <div class="input-row"><label>日期</label><input type="date" id="input-date" oninput="updateUI()"></div>
-    
     <div style="display: flex; gap: 10px;">
-        <div class="input-row" style="flex:1.5;">
-            <label>部數</label>
-            <select id="input-part" onchange="updateUI()">
-                <option value="">請選擇</option>
-                <option value="第1部">第1部</option>
-                <option value="第2部">第2部</option>
-                <option value="第3部">第3部</option>
-                <option value="第4部">第4部</option>
-                <option value="第5部">第5部</option>
-                <option value="第6部">第6部</option>
-            </select>
-        </div>
-        <div class="input-row" style="flex:1;"><label>枚數</label><input type="number" id="input-cards" placeholder="枚" oninput="updateUI()"></div>
-        <div class="input-row" style="flex:1;"><label>秒數</label><input type="number" id="input-seconds" placeholder="秒" oninput="updateUI()"></div>
+        <div class="input-row" style="flex:1.5;"><label>部數</label><select id="input-part" onchange="updateUI()"><option value="">請選擇</option><option value="第1部">第1部</option><option value="第2部">第2部</option><option value="第3部">第3部</option><option value="第4部">第4部</option><option value="第5部">第5部</option><option value="第6部">第6部</option></select></div>
+        <div class="input-row" style="flex:1;"><label>枚數</label><input type="number" id="input-cards" oninput="updateUI()"></div>
+        <div class="input-row" style="flex:1;"><label>秒數</label><input type="number" id="input-seconds" oninput="updateUI()"></div>
     </div>
-
-    <hr>
-    <div class="input-row">
-        <label>頭像位置調整 (上下移動 px)</label>
-        <input type="range" min="-50" max="50" value="0" id="avatar-offset" oninput="adjustAvatar()">
-    </div>
-
+    <div class="input-row"><label>頭像垂直位置調整</label><input type="range" min="-100" max="100" value="0" id="avatar-offset" oninput="adjustAvatar()"></div>
     <div class="input-row">
         <label>圖片上傳</label>
-        <div style="font-size: 11px; color: #888; margin-bottom:5px;">成員頭像：</div>
         <input type="file" id="up-member" onchange="previewFile('member')">
-        <div style="font-size: 11px; color: #888; margin: 8px 0 5px;">我的頭像：</div>
-        <input type="file" id="up-fan" onchange="previewFile('fan')">
-        <div style="font-size: 11px; color: #888; margin: 8px 0 5px;">背景圖片：</div>
-        <input type="file" id="up-bg" onchange="previewFile('bg')">
+        <input type="file" id="up-fan" onchange="previewFile('fan')" style="margin-top:10px">
+        <input type="file" id="up-bg" onchange="previewFile('bg')" style="margin-top:10px">
     </div>
-    
-    <button class="nav-btn" style="width:100%; padding:15px; background:var(--sakura-pink); color:white; border-radius:10px; font-size:16px;" onclick="closeAllDrawers()">完成並關閉</button>
+    <button style="width:100%; padding:15px; background:var(--sakura-pink); color:white; border:none; border-radius:10px;" onclick="closeAllDrawers()">儲存並關閉</button>
+</div>
+
+<div class="drawer" id="archiveDrawer">
+    <h3>📂 紀錄存檔管理</h3>
+    <div class="input-row"><label>本次紀錄命名 (存檔用)</label><input type="text" id="archive-name" placeholder="例如：260110 璃花 3部"></div>
+    <button style="width:100%; padding:12px; background:#333; color:white; border-radius:8px; margin-bottom:20px;" onclick="saveRecord()">💾 儲存為新紀錄</button>
+    <div id="record-list"></div>
 </div>
 
 <div class="drawer" id="chatDrawer">
-    <h3>💬 新增對話內容</h3>
-    <textarea id="input-msg" rows="4" placeholder="輸入要記錄的話..."></textarea>
-    <div style="display: flex; gap: 10px; margin-top:15px;">
-        <button onclick="addChat('member')" style="flex:1; padding:12px; background:#fff; border:1px solid #ddd; border-radius:8px;">成員發言</button>
-        <button onclick="addChat('fan')" style="flex:1; padding:12px; background:#f0f0f0; border:none; border-radius:8px;">我方發言</button>
-    </div>
-    <button onclick="addChat('note')" style="width:100%; margin-top:10px; padding:10px; background:#eee; border:none; border-radius:8px;">加入旁白筆記</button>
+    <h3>💬 新增對話</h3>
+    <textarea id="input-msg" rows="4"></textarea>
+    <div style="display:flex; gap:10px; margin-top:15px;"><button onclick="addChat('member')" style="flex:1; padding:12px; background:#fff; border:1px solid #ddd; border-radius:8px;">成員</button><button onclick="addChat('fan')" style="flex:1; padding:12px; background:#f0f0f0; border:none; border-radius:8px;">我</button></div>
 </div>
 
 <div class="bottom-nav">
-    <button class="nav-btn" onclick="openDrawer('configDrawer')"><i>⚙️</i>設定</button>
-    <button class="nav-btn" onclick="openDrawer('chatDrawer')"><i>💬</i>對話</button>
-    <button class="nav-btn" onclick="saveToLocal()"><i>💾</i>存檔</button>
-    <button class="nav-btn" onclick="loadFromLocal()"><i>📂</i>讀取</button>
-    <button class="nav-btn" onclick="saveImage()" style="color:var(--sakura-pink); font-weight:bold;"><i>📸</i>截圖</button>
+    <button class="nav-btn" onclick="openDrawer('configDrawer')"><span>⚙️</span>設定</button>
+    <button class="nav-btn" onclick="openDrawer('chatDrawer')"><span>💬</span>對話</button>
+    <button class="nav-btn" onclick="openDrawer('archiveDrawer')"><span>📂</span>存檔庫</button>
+    <button class="nav-btn" onclick="saveImage()" style="color:var(--sakura-pink); font-weight:bold;"><span>📸</span>截圖</button>
 </div>
 
 <script>
-    let memberAvatar = "https://via.placeholder.com/150";
-    let fanAvatar = "https://via.placeholder.com/150";
-    let lastType = "";
-
-    function openDrawer(id) {
-        document.getElementById('overlay').style.display = 'block';
-        document.getElementById(id).classList.add('active');
+    let memberAvatar = ""; let fanAvatar = ""; let lastType = "";
+    
+    function openDrawer(id) { 
+        document.getElementById('overlay').style.display = 'block'; 
+        document.getElementById(id).classList.add('active'); 
+        if(id === 'archiveDrawer') renderRecordList();
     }
-
-    function closeAllDrawers() {
-        document.getElementById('overlay').style.display = 'none';
-        document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+    function closeAllDrawers() { 
+        document.getElementById('overlay').style.display = 'none'; 
+        document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); 
     }
-
     function updateUI() {
         document.getElementById('prev-name').innerText = document.getElementById('input-name').value;
         document.getElementById('prev-nick').innerText = document.getElementById('input-nick').value;
-        
         const rawDate = document.getElementById('input-date').value;
         if (rawDate) {
             const dateObj = new Date(rawDate);
             const days = ['日', '一', '二', '三', '四', '五', '六'];
             document.getElementById('prev-date').innerText = `${dateObj.getMonth()+1}/${dateObj.getDate()}(${days[dateObj.getDay()]})`;
         }
-        
         document.getElementById('prev-part').innerText = document.getElementById('input-part').value;
         const c = document.getElementById('input-cards').value;
         const s = document.getElementById('input-seconds').value;
         document.getElementById('prev-cards').innerText = c ? `🎫 ${c} 枚` : '';
         document.getElementById('prev-seconds').innerText = s ? `⏱️ ${s} 秒` : '';
     }
-
-    function adjustAvatar() {
-        const offset = document.getElementById('avatar-offset').value;
-        document.getElementById('prev-img-member').style.top = offset + "px";
-    }
-
+    function adjustAvatar() { document.getElementById('prev-img-member').style.top = document.getElementById('avatar-offset').value + "px"; }
     function previewFile(type) {
         const file = document.getElementById(`up-${type}`).files[0];
         const reader = new FileReader();
         reader.onloadend = () => {
             if (type === 'member') { memberAvatar = reader.result; document.getElementById('prev-img-member').src = reader.result; }
             else if (type === 'fan') { fanAvatar = reader.result; }
-            else if (type === 'bg') { document.getElementById('bg-overlay').style.backgroundImage = `url(${reader.result})`; }
+            else { document.getElementById('bg-overlay').style.backgroundImage = `url(${reader.result})`; }
         };
         if (file) reader.readAsDataURL(file);
     }
-
     function addChat(type) {
         const msg = document.getElementById('input-msg').value;
-        if (!msg && type !== 'note') return;
+        if (!msg) return;
         const list = document.getElementById('chat-list');
         const div = document.createElement('div');
-        
-        if (type === 'note') {
-            div.className = 'narration';
-            div.innerText = msg;
-            lastType = "note";
-        } else {
-            const isCont = (type === lastType);
-            div.className = `chat-item item-${type} ${isCont ? 'no-avatar' : ''}`;
-            div.innerHTML = `
-                <div class="del-btn" onclick="this.parentElement.remove()">✕</div>
-                <img src="${type === 'member' ? memberAvatar : fanAvatar}" class="chat-avatar" style="${isCont ? 'display:none' : ''}">
-                <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
-            `;
-            lastType = type;
-        }
-        list.appendChild(div);
-        document.getElementById('input-msg').value = '';
+        const isCont = (type === lastType);
+        div.className = `chat-item item-${type} ${isCont ? 'no-avatar' : ''}`;
+        div.innerHTML = `<div class="del-btn" onclick="this.parentElement.remove()">✕</div>
+                         <img src="${type==='member'?memberAvatar:fanAvatar}" class="chat-avatar" style="${isCont?'display:none':''}">
+                         <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>`;
+        list.appendChild(div); lastType = type; document.getElementById('input-msg').value = '';
     }
 
-    function saveToLocal() {
-        const data = {
-            name: document.getElementById('input-name').value,
-            nick: document.getElementById('input-nick').value,
-            date: document.getElementById('input-date').value,
-            part: document.getElementById('input-part').value,
-            cards: document.getElementById('input-cards').value,
-            seconds: document.getElementById('input-seconds').value,
-            chats: document.getElementById('chat-list').innerHTML,
-            mAv: memberAvatar, fAv: fanAvatar,
-            bg: document.getElementById('bg-overlay').style.backgroundImage,
-            offset: document.getElementById('avatar-offset').value
+    // 多紀錄存檔系統
+    function saveRecord() {
+        const title = document.getElementById('archive-name').value || "未命名紀錄";
+        const records = JSON.parse(localStorage.getItem('meguri_library') || "[]");
+        const newRecord = {
+            id: Date.now(), title, 
+            data: {
+                name: document.getElementById('input-name').value, nick: document.getElementById('input-nick').value,
+                date: document.getElementById('input-date').value, part: document.getElementById('input-part').value,
+                cards: document.getElementById('input-cards').value, seconds: document.getElementById('input-seconds').value,
+                chats: document.getElementById('chat-list').innerHTML, mAv: memberAvatar, fAv: fanAvatar,
+                bg: document.getElementById('bg-overlay').style.backgroundImage, offset: document.getElementById('avatar-offset').value
+            }
         };
-        localStorage.setItem('meguri_v6_save', JSON.stringify(data));
-        alert('存檔成功！');
+        records.push(newRecord); localStorage.setItem('meguri_library', JSON.stringify(records));
+        alert('紀錄已存入檔案庫'); renderRecordList();
     }
 
-    function loadFromLocal() {
-        const s = localStorage.getItem('meguri_v6_save');
-        if (!s) return alert('無存檔紀錄');
-        const d = JSON.parse(s);
-        document.getElementById('input-name').value = d.name;
-        document.getElementById('input-nick').value = d.nick;
-        document.getElementById('input-date').value = d.date;
-        document.getElementById('input-part').value = d.part;
-        document.getElementById('input-cards').value = d.cards;
-        document.getElementById('input-seconds').value = d.seconds;
+    function renderRecordList() {
+        const listContainer = document.getElementById('record-list');
+        const records = JSON.parse(localStorage.getItem('meguri_library') || "[]");
+        listContainer.innerHTML = records.map(r => `
+            <div class="archive-item">
+                <span onclick="loadRecord(${r.id})">📄 ${r.title}</span>
+                <span style="color:red" onclick="deleteRecord(${r.id})">🗑️</span>
+            </div>
+        `).reverse().join('');
+    }
+
+    function loadRecord(id) {
+        const records = JSON.parse(localStorage.getItem('meguri_library') || "[]");
+        const r = records.find(item => item.id === id);
+        if(!r) return;
+        const d = r.data;
+        document.getElementById('input-name').value = d.name; document.getElementById('input-nick').value = d.nick;
+        document.getElementById('input-date').value = d.date; document.getElementById('input-part').value = d.part;
+        document.getElementById('input-cards').value = d.cards; document.getElementById('input-seconds').value = d.seconds;
         document.getElementById('chat-list').innerHTML = d.chats;
-        memberAvatar = d.mAv; fanAvatar = d.fAv;
-        document.getElementById('prev-img-member').src = memberAvatar;
+        memberAvatar = d.mAv; fanAvatar = d.fAv; document.getElementById('prev-img-member').src = memberAvatar;
         document.getElementById('bg-overlay').style.backgroundImage = d.bg || "";
         document.getElementById('avatar-offset').value = d.offset || 0;
-        adjustAvatar(); updateUI();
-        alert('已載入存檔');
+        adjustAvatar(); updateUI(); closeAllDrawers();
+    }
+
+    function deleteRecord(id) {
+        if(!confirm('確定刪除此紀錄？')) return;
+        let records = JSON.parse(localStorage.getItem('meguri_library') || "[]");
+        records = records.filter(r => r.id !== id);
+        localStorage.setItem('meguri_library', JSON.stringify(records));
+        renderRecordList();
     }
 
     function saveImage() {
         closeAllDrawers();
         const btns = document.querySelectorAll('.del-btn');
         btns.forEach(b => b.style.opacity = '0');
-        
         html2canvas(document.querySelector("#capture-area"), { scale: 3, useCORS: true }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `Meguri_Log_${document.getElementById('input-name').value}.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
+            link.download = `Meguri_Log.png`; link.href = canvas.toDataURL("image/png"); link.click();
             btns.forEach(b => b.style.opacity = '0.5');
         });
     }
