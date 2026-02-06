@@ -254,7 +254,7 @@
     const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
     const nickValue = getVal('input-nick');
 
-    // 關鍵：儲存當下 chat-list 的所有 HTML 內容，確保每一行都被存到
+    // 直接抓取整個對話容器的 HTML，確保不限行數完整存檔
     const chatContent = document.getElementById('chat-list').innerHTML;
 
     db[idx] = {
@@ -266,11 +266,13 @@
         part: getVal('input-part'),
         cards: getVal('input-cards'),
         seconds: getVal('input-seconds'),
-        chats: chatContent, // 儲存完整對話
+        chats: chatContent, // 存檔所有對話
         mAv: mAv,
         fAv: fAv
     };
     saveDB(db);
+    
+    // 同時儲存預設暱稱
     if(nickValue) localStorage.setItem('default_nickname', nickValue);
 }
 
