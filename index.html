@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sakurazaka46 紀錄系統 V10</title>
+    <title>Sakurazaka46 ミーグリ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; --bg-main: #f8f9fa; }
@@ -25,37 +25,20 @@
         .card-actions { display: flex; gap: 10px; }
         .btn-del { color: #ff3b30; border: none; background: none; padding: 10px; }
 
-        /* --- 編輯模式顯示樣式 (上方的預覽) --- */
-        #capture-area { padding: 20px 20px 100px; flex-grow: 1; }
+        /* --- 編輯模式預覽面板 --- */
+        #capture-area { padding: 20px 20px 100px; flex-grow: 1; background: white; }
         .header-center { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #f2f2f7; padding-bottom: 15px; position: relative; }
         
-        /* 縮小頭像尺寸 */
-        .avatar-container { width: 85px; height: 85px; border-radius: 50%; overflow: hidden; margin: 0 auto 8px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
+        .avatar-container { width: 85px; height: 85px; border-radius: 50%; overflow: hidden; margin: 0 auto 10px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
         .header-avatar { width: 100%; height: 100%; object-fit: cover; }
         
-        /* 縮小文字 */
         .header-name { font-size: 20px; font-weight: bold; margin: 0; }
         .header-date { font-size: 12px; color: var(--text-gray); margin-top: 2px; }
         .nick-label { font-size: 11px; margin-top: 5px; color: #333; }
         .header-nick { font-size: 18px; font-weight: bold; color: var(--nick-green); margin-top: 0; }
         
-        .status-corner { 
-    position: absolute; 
-    right: 0; 
-    bottom: 5px; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: flex-end; 
-    gap: 2px; 
-    font-size: 11px; 
-    color: var(--text-gray); 
-}
-
-.status-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
+        .status-corner { position: absolute; right: 0; bottom: 5px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 11px; color: var(--text-gray); }
+        .status-item { display: flex; align-items: center; gap: 4px; }
 
         /* 對話樣式 */
         .chat-list { display: flex; flex-direction: column; gap: 8px; }
@@ -71,42 +54,31 @@
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
         
-        /* 其他/備註樣式 */
+        /* 其他/OS 樣式 */
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
         .item-other .bubble { background: transparent; color: #ced4da; font-size: 12px; text-align: center; padding: 5px 20px; border: none; }
 
-        /* 裁剪 Modal */
+        /* 裁剪視窗 */
         #crop-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         .crop-viewport { width: 300px; height: 300px; border: 1px solid #fff; position: relative; overflow: hidden; }
         .crop-circle-mask { position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); z-index: 3; pointer-events: none; }
         .grid-line { position: absolute; background: rgba(255,255,255,0.4); z-index: 2; }
         .v1 { left: 33%; top: 0; width: 1px; height: 100%; } .v2 { left: 66%; top: 0; width: 1px; height: 100%; }
         .h1 { top: 33%; left: 0; height: 1px; width: 100%; } .h2 { top: 66%; left: 0; height: 1px; width: 100%; }
-        #preview-img-raw { position: absolute; cursor: move; touch-action: none; width: 100%; height: auto; }
+        #preview-img-raw { position: absolute; cursor: move; touch-action: none; width: auto; height: auto; }
 
-        /* --- 面板控制 (設定與對話) --- */
-        .drawer { 
-            position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); 
-            width: 100%; max-width: 450px; background: white; transition: 0.3s; 
-            z-index: 500; border-radius: 20px 20px 0 0; padding: 15px 20px; 
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.2); 
-        }
+        /* 面板控制 (設定與對話) */
+        .drawer { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: white; transition: 0.3s; z-index: 500; border-radius: 20px 20px 0 0; padding: 15px 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.active { bottom: 0; }
         .drawer h3 { margin: 0 0 10px 0; font-size: 16px; }
 
-        input, select, textarea { 
-            width: 100%; padding: 8px 10px; margin-bottom: 6px; font-size: 14px; 
-            border: 1px solid #ddd; border-radius: 8px; background: #fafafa;
-            box-sizing: border-box; max-width: 100%;
-        }
-
+        input, select, textarea { width: 100%; padding: 8px 10px; margin-bottom: 6px; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; box-sizing: border-box; max-width: 100%; }
         .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; width: 100%; }
         .config-grid input, .config-grid select { margin-bottom: 0; }
 
         .drawer-btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
         .drawer-btn-group button { flex: 1; padding: 8px; font-size: 13px; border-radius: 6px; border: 1px solid #eee; background: white; cursor: pointer; }
 
-        /* 底欄導航 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 400; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 450px; background: white; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #eee; z-index: 300; }
         .nav-btn { background: none; border: none; font-size: 11px; cursor: pointer; color: #666; }
@@ -135,11 +107,12 @@
             <div id="prev-date" class="header-date">日期</div>
             <div class="nick-label">👤 ニックネーム</div>
             <div id="prev-nick" class="header-nick">暱稱</div>
+            
             <div class="status-corner">
-    <div id="prev-part" class="status-item"></div>
-    <div id="prev-cards" class="status-item"></div>
-    <div id="prev-seconds" class="status-item"></div>
-</div>
+                <div id="prev-part" class="status-item"></div>
+                <div id="prev-cards" class="status-item"></div>
+                <div id="prev-seconds" class="status-item"></div>
+            </div>
         </div>
         <div class="chat-list" id="chat-list"></div>
     </div>
@@ -162,7 +135,7 @@
 <div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
 
 <div class="drawer" id="configDrawer">
-    <h3>⚙️ 記錄資料設定</h3>
+    <h3>⚙️ 紀錄資料設定</h3>
     <div class="drawer-btn-group">
         <button onclick="triggerFile('member')">成員相片</button>
         <button onclick="triggerFile('fan')">我的相片</button>
@@ -170,7 +143,7 @@
     <input type="file" id="real-file-input" style="display:none" onchange="handleFile(this)">
     <input type="text" id="input-name" placeholder="成員姓名" oninput="liveUpdate()">
     <input type="text" id="input-nick" placeholder="你的暱稱" oninput="liveUpdate()">
-    <input type="text" id="input-single" placeholder="單曲/專輯名稱" oninput="liveUpdate()">
+    <input type="text" id="input-single" placeholder="單曲/專輯名稱" oninput="autoSave()">
     <input type="date" id="input-date" oninput="liveUpdate()">
     <div class="config-grid">
         <select id="input-part" onchange="liveUpdate()">
@@ -206,23 +179,24 @@
     function saveDB(db) { localStorage.setItem('sakura_v10_db', JSON.stringify(db)); }
 
     function renderRecordList() {
-    const db = getDB();
-    const container = document.getElementById('record-list');
-    container.innerHTML = db.length === 0 ? '<p style="text-align:center; color:#999; margin-top:20px;">目前沒有記錄。</p>' : '';
-    db.reverse().forEach(r => {
-        const card = document.createElement('div');
-        card.className = 'record-card';
-        card.onclick = () => loadEditView(r.id);
-        card.innerHTML = `
-            <div class="record-info">
-                <div class="r-title">${r.name || '成員'} ${r.single ? `<span style="font-size:0.8rem; color:var(--sakura-pink); font-weight:normal;">[${r.single}]</span>` : ''}</div>
-                <div class="r-meta">${r.date || '無日期'} | ${r.part || ''}</div>
-            </div>
-            <div class="card-actions"><button class="btn-del" onclick="event.stopPropagation(); deleteRecord(${r.id})">🗑️</button></div>
-        `;
-        container.appendChild(card);
-    });
-}
+        const db = getDB();
+        const container = document.getElementById('record-list');
+        if(!container) return;
+        container.innerHTML = db.length === 0 ? '<p style="text-align:center; color:#999; margin-top:20px;">目前沒有記錄。</p>' : '';
+        [...db].reverse().forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.onclick = () => loadEditView(r.id);
+            card.innerHTML = `
+                <div class="record-info">
+                    <div class="r-title">${r.name || '成員'} ${r.single ? `<span style="font-size:0.8rem; color:var(--sakura-pink); font-weight:normal;">[${r.single}]</span>` : ''}</div>
+                    <div class="r-meta">${r.date || '無日期'} | ${r.part || ''}</div>
+                </div>
+                <div class="card-actions"><button class="btn-del" onclick="event.stopPropagation(); deleteRecord(${r.id})">🗑️</button></div>
+            `;
+            container.appendChild(card);
+        });
+    }
 
     function createNewRecord() {
         const id = Date.now();
@@ -242,16 +216,21 @@
         currentRecordId = id;
         const db = getDB();
         const r = db.find(item => item.id === id);
-        document.getElementById('input-single').value = r.single || ""; // 讀取存檔
-        document.getElementById('input-name').value = r.name || "";
-        document.getElementById('input-nick').value = r.nick || "";
-        document.getElementById('input-date').value = r.date || "";
-        document.getElementById('input-part').value = r.part || "";
-        document.getElementById('input-cards').value = r.cards || "";
-        document.getElementById('input-seconds').value = r.seconds || "";
+        
+        // 安全填充輸入框，防止不存在時報錯
+        const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ""; };
+        setVal('input-single', r.single);
+        setVal('input-name', r.name);
+        setVal('input-nick', r.nick);
+        setVal('input-date', r.date);
+        setVal('input-part', r.part);
+        setVal('input-cards', r.cards);
+        setVal('input-seconds', r.seconds);
+        
         document.getElementById('chat-list').innerHTML = r.chats || "";
         mAv = r.mAv; fAv = r.fAv;
         document.getElementById('prev-img-member').src = mAv || "https://via.placeholder.com/150";
+        
         liveUpdate();
         document.getElementById('main-dashboard').classList.remove('active');
         document.getElementById('edit-view').classList.add('active');
@@ -259,9 +238,13 @@
 
     function backToDash() {
         autoSave();
-        document.getElementById('edit-view').classList.remove('active');
-        document.getElementById('main-dashboard').classList.add('active');
-        renderRecordList(); 
+        const editView = document.getElementById('edit-view');
+        const dashView = document.getElementById('main-dashboard');
+        if(editView && dashView) {
+            editView.classList.remove('active');
+            dashView.classList.add('active');
+            renderRecordList(); 
+        }
     }
 
     function autoSave() {
@@ -269,15 +252,18 @@
         const db = getDB();
         const idx = db.findIndex(r => r.id === currentRecordId);
         if(idx === -1) return;
+        
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+
         db[idx] = {
             ...db[idx],
-            name: document.getElementById('input-name').value,
-            single: document.getElementById('input-single').value,
-            nick: document.getElementById('input-nick').value,
-            date: document.getElementById('input-date').value,
-            part: document.getElementById('input-part').value,
-            cards: document.getElementById('input-cards').value,
-            seconds: document.getElementById('input-seconds').value,
+            name: getVal('input-name'),
+            single: getVal('input-single'),
+            nick: getVal('input-nick'),
+            date: getVal('input-date'),
+            part: getVal('input-part'),
+            cards: getVal('input-cards'),
+            seconds: getVal('input-seconds'),
             chats: document.getElementById('chat-list').innerHTML,
             mAv, fAv
         };
@@ -285,9 +271,12 @@
     }
 
     function liveUpdate() {
-        document.getElementById('prev-name').innerText = document.getElementById('input-name').value || "成員";
-        document.getElementById('prev-nick').innerText = document.getElementById('input-nick').value || "暱稱";
-        const dateVal = document.getElementById('input-date').value;
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+        
+        document.getElementById('prev-name').innerText = getVal('input-name') || "成員";
+        document.getElementById('prev-nick').innerText = getVal('input-nick') || "暱稱";
+        
+        const dateVal = getVal('input-date');
         if (dateVal) {
             const dateObj = new Date(dateVal);
             const weekDay = ["日", "一", "二", "三", "四", "五", "六"][dateObj.getDay()];
@@ -295,12 +284,14 @@
         } else {
             document.getElementById('prev-date').innerText = "日期";
         }
-        const part = document.getElementById('input-part').value;
-        document.getElementById('prev-part').innerText = document.getElementById('input-part').value || "部數";
-        const cards = document.getElementById('input-cards').value;
+
+        // 右側預覽 (圖案 + 單位)
+        document.getElementById('prev-part').innerText = getVal('input-part');
+        const cards = getVal('input-cards');
         document.getElementById('prev-cards').innerText = cards ? `🎫 ${cards} 枚` : "";
-        const seconds = document.getElementById('input-seconds').value;
+        const seconds = getVal('input-seconds');
         document.getElementById('prev-seconds').innerText = seconds ? `⏱️ ${seconds} 秒` : "";
+        
         autoSave();
     }
 
@@ -322,6 +313,7 @@
     }
 
     function triggerFile(t) { uploadTarget = t; document.getElementById('real-file-input').click(); }
+    
     function handleFile(i) {
         const file = i.files[0];
         if(file) {
@@ -330,15 +322,35 @@
                 const img = document.getElementById('preview-img-raw');
                 img.src = e.target.result; 
                 document.getElementById('crop-modal').style.display = 'flex'; 
-                img.onload = function() { img.style.width = "300px"; img.style.height = "auto"; img.style.top = '0px'; img.style.left = '0px'; };
+                
+                img.onload = function() {
+                    // 自動將圖片縮小到適合裁切框的大小 (300px)
+                    const scale = 300 / Math.min(img.naturalWidth, img.naturalHeight);
+                    img.style.width = (img.naturalWidth * scale) + "px";
+                    img.style.height = (img.naturalHeight * scale) + "px";
+                    img.style.top = '0px';
+                    img.style.left = '0px';
+                };
             };
             reader.readAsDataURL(file);
         }
     }
+
     let isD = false; const rawI = document.getElementById('preview-img-raw');
     rawI.onmousedown = () => isD = true; window.onmouseup = () => isD = false;
     window.onmousemove = e => { if(isD) { rawI.style.left = (rawI.offsetLeft + e.movementX) + 'px'; rawI.style.top = (rawI.offsetTop + e.movementY) + 'px'; } };
     
+    // 支援觸控拖曳
+    rawI.ontouchstart = () => isD = true; rawI.ontouchend = () => isD = false;
+    rawI.ontouchmove = e => { 
+        if(isD) {
+            const touch = e.touches[0];
+            rawI.style.left = (rawI.offsetLeft + (touch.clientX - (rawI.lastX || touch.clientX))) + 'px';
+            rawI.style.top = (rawI.offsetTop + (touch.clientY - (rawI.lastY || touch.clientY))) + 'px';
+            rawI.lastX = touch.clientX; rawI.lastY = touch.clientY;
+        }
+    };
+
     function confirmCrop() {
         if(uploadTarget === 'member') { mAv = rawI.src; document.getElementById('prev-img-member').src = mAv; } 
         else { fAv = rawI.src; }
@@ -351,8 +363,16 @@
     
     function takeShot() {
         closeAllDrawers();
-        html2canvas(document.querySelector("#capture-area"), { scale: 3 }).then(c => {
-            const a = document.createElement('a'); a.download='Meguri_Log.png'; a.href=c.toDataURL(); a.click();
+        const area = document.querySelector("#capture-area");
+        html2canvas(area, { 
+            scale: 4, 
+            useCORS: true,
+            backgroundColor: "#ffffff"
+        }).then(c => {
+            const a = document.createElement('a'); 
+            a.download='Meguri_Log_' + Date.now() + '.png'; 
+            a.href=c.toDataURL("image/png", 1.0); 
+            a.click();
         });
     }
 
