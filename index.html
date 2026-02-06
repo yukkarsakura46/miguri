@@ -237,15 +237,23 @@
     }
 
     function backToDash() {
-        autoSave();
-        const editView = document.getElementById('edit-view');
-        const dashView = document.getElementById('main-dashboard');
-        if(editView && dashView) {
-            editView.classList.remove('active');
-            dashView.classList.add('active');
-            renderRecordList(); 
-        }
+    try {
+        autoSave(); // 嘗試存檔
+    } catch (e) {
+        console.warn("存檔失敗（可能是圖片太大）：", e);
+        // 如果是因為空間不足，可以提示使用者刪除舊紀錄
     }
+
+    // 強制切換視窗
+    const editView = document.getElementById('edit-view');
+    const dashView = document.getElementById('main-dashboard');
+    
+    if (editView && dashView) {
+        editView.classList.remove('active');
+        dashView.classList.add('active');
+        renderRecordList(); 
+    }
+}
 
     function autoSave() {
     if(!currentRecordId) return;
@@ -258,15 +266,15 @@
     db[idx] = {
         ...db[idx],
         name: getVal('input-name'),
-        single: getVal('input-single'),
+        single: getVal('input-single'), // 儲存單曲名稱
         nick: getVal('input-nick'),
         date: getVal('input-date'),
         part: getVal('input-part'),
         cards: getVal('input-cards'),
         seconds: getVal('input-seconds'),
         chats: document.getElementById('chat-list').innerHTML,
-        mAv: mAv, 
-        fAv: fAv  
+        mAv: mAv, // 確保成員頭像數據被存入
+        fAv: fAv  // 確保粉絲頭像數據被存入
     };
     saveDB(db);
 }
@@ -353,16 +361,19 @@
     };
 
     function confirmCrop() {
-    const imgData = rawI.src; // 取得裁切後的圖片數據
-    if (uploadTarget === 'member') {
-        mAv = imgData; // 更新成員頭像變數
-        document.getElementById('prev-img-member').src = mAv;
-    } else {
-        fAv = imgData; // 更新我的頭像變數
+    const imgData = rawI.src; 
+    if(uploadTarget === 'member') { 
+        mAv = imgData; 
+        document.getElementById('prev-img-member').src = mAv; 
+    } else { 
+        fAv = imgData; 
     }
-    
     closeCrop();
-    autoSave(); // 關鍵：裁切完立即執行存檔，將圖片字串寫入資料庫
+    
+    // 延遲存檔，避免阻塞 UI 動畫
+    setTimeout(() => {
+        autoSave();
+    }, 100);
 }
     function closeCrop() { document.getElementById('crop-modal').style.display='none'; }
 
