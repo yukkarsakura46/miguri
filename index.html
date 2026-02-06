@@ -2,132 +2,130 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Sakurazaka46 紀錄產生器 V5 - Pro Layout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sakurazaka46 紀錄產生器 Mobile</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; }
-        body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #d1d1d6; display: flex; padding: 20px; gap: 20px; justify-content: center; }
+        :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; --ui-bg: #ffffff; }
         
-        /* 控制面板 */
-        .controls { width: 340px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); height: 95vh; overflow-y: auto; font-size: 14px; }
-        .controls h2 { margin: 0 0 15px 0; font-size: 1.1rem; border-left: 4px solid var(--sakura-pink); padding-left: 10px; }
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        
-        .btn-area { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        button { cursor: pointer; padding: 10px; border: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-        .btn-member { background: #fff; color: #333; border: 1px solid #ddd; }
-        .btn-fan { background: #efefef; color: #333; }
-        .btn-save { background: #333; color: white; margin-top: 10px; }
-        .btn-storage { background: #3498db; color: white; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: #eee; margin: 0; overflow-x: hidden; }
 
-        /* 預覽區核心 */
+        /* 主預覽區 */
         #capture-area { 
-            width: 450px; background: white; min-height: 800px; padding: 40px 30px; 
-            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+            width: 100vw; min-height: 100vh; background: white; padding: 20px 15px 100px; 
+            position: relative; display: flex; flex-direction: column;
         }
-        #bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; z-index: 0; background-size: cover; pointer-events: none; }
-        .content-layer { position: relative; z-index: 1; flex-grow: 1; }
 
-        /* 頂部資訊：全部置中 */
-        .header-center { text-align: center; margin-bottom: 30px; position: relative; padding-bottom: 20px; border-bottom: 1px solid #f2f2f7; }
-        .header-avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header-name { font-size: 28px; font-weight: bold; color: #000; margin: 0; }
-        .header-date { font-size: 14px; color: var(--text-gray); margin-top: 4px; }
-        .header-nick { font-size: 20px; font-weight: bold; color: var(--nick-green); margin-top: 8px; }
+        /* 頂部資訊：置中 */
+        .header-center { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #f2f2f7; padding-bottom: 15px; }
+        .header-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .header-name { font-size: 24px; font-weight: bold; margin: 0; min-height: 32px; }
+        .header-date { font-size: 14px; color: var(--text-gray); margin-top: 5px; }
+        .nick-label { font-size: 11px; color: #333; margin-top: 10px; }
+        .header-nick { font-size: 20px; font-weight: bold; color: var(--nick-green); min-height: 28px; }
+        
+        .status-corner { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; font-size: 12px; color: var(--text-gray); }
 
-        /* 部數資訊：縮小移至右下角 */
-        .status-corner { position: absolute; right: 0; bottom: 5px; display: flex; gap: 10px; font-size: 12px; color: var(--text-gray); }
-        .status-corner span { display: flex; align-items: center; gap: 3px; }
-
-        /* 對話樣式 */
-        .chat-list { display: flex; flex-direction: column; gap: 10px; }
-        .chat-item { display: flex; align-items: flex-start; position: relative; max-width: 90%; }
+        /* 對話列表 */
+        .chat-list { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+        .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; }
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
-        
-        .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .item-member .chat-avatar { margin-right: 12px; }
-        .item-fan .chat-avatar { margin-left: 12px; }
+        .chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .item-member .chat-avatar { margin-right: 10px; }
+        .item-fan .chat-avatar { margin-left: 10px; }
+        .bubble { padding: 10px 14px; font-size: 15px; border-radius: 18px; line-height: 1.4; word-break: break-all; }
+        .item-member .bubble { background: #fff; border: 1px solid #eee; border-top-left-radius: 4px; }
+        .item-fan .bubble { background: #f0f0f0; border-top-right-radius: 4px; }
+        .no-avatar { margin-left: 50px; }
+        .item-fan.no-avatar { margin-right: 50px; margin-left: 0; }
+        .narration { text-align: center; color: #bbb; font-size: 13px; margin: 10px 0; font-style: italic; }
 
-        .bubble { padding: 10px 16px; font-size: 15px; line-height: 1.5; border-radius: 18px; }
-        .item-member .bubble { background: #fff; border: 1px solid #efeff4; border-top-left-radius: 4px; }
-        .item-fan .bubble { background: #efefef; border-top-right-radius: 4px; }
-        
-        .no-avatar { margin-left: 57px; }
-        .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
+        /* 底部操作欄 */
+        .bottom-nav { 
+            position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.9); 
+            backdrop-filter: blur(10px); display: flex; justify-content: space-around; 
+            padding: 10px; border-top: 1px solid #ddd; z-index: 100;
+        }
+        .nav-btn { background: none; border: none; font-size: 24px; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #555; }
+        .nav-btn span { font-size: 20px; margin-bottom: 2px; }
 
-        .narration { text-align: center; color: #bbb; font-size: 13px; margin: 15px 0; font-style: italic; }
-        .delete-btn { position: absolute; left: -25px; top: 12px; color: #ff3b30; cursor: pointer; font-weight: bold; display: none; }
-        .chat-item:hover .delete-btn { display: block; }
+        /* 彈出式面板 (抽屜) */
+        .drawer { 
+            position: fixed; bottom: -100%; left: 0; width: 100%; background: white; 
+            transition: 0.3s; z-index: 200; border-radius: 20px 20px 0 0; padding: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); max-height: 80vh; overflow-y: auto;
+        }
+        .drawer.active { bottom: 0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 150; }
+        
+        .input-row { margin-bottom: 15px; }
+        .input-row label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-main { background: var(--sakura-pink); color: white; }
+        .btn-sub { background: #f0f0f0; color: #333; }
     </style>
 </head>
 <body>
 
-<div class="controls">
-    <h2>⚙️ 介面與內容設定</h2>
-    <div class="input-group">
-        <label>成員姓名</label>
-        <input type="text" id="input-name" value="石森璃花" oninput="updateUI()">
+<div id="capture-area">
+    <div class="header-center">
+        <img src="https://via.placeholder.com/150" id="prev-img-member" class="header-avatar" onclick="openDrawer('configDrawer')">
+        <div id="prev-name" class="header-name"></div>
+        <div id="prev-date" class="header-date"></div>
+        <div class="nick-label">👤 ニックネーム</div>
+        <div id="prev-nick" class="header-nick"></div>
+        
+        <div class="status-corner">
+            <span id="prev-part"></span>
+            <span id="prev-info-row"></span>
+        </div>
     </div>
-    <div class="input-group">
-        <label>你的暱稱 (顯示為綠色字體)</label>
-        <input type="text" id="input-nick" value="CoCo" oninput="updateUI()">
-    </div>
-    <div class="input-group">
-        <label>日期</label>
-        <input type="date" id="input-date" value="2026/01/10" oninput="updateUI()">
-    </div>
-    
-    <div style="display: flex; gap: 5px;">
-        <div class="input-group"><label>部數</label><input type="text" id="input-part" value="第3部" oninput="updateUI()"></div>
-        <div class="input-group"><label>枚數</label><input type="number" id="input-cards" value="3" oninput="updateUI()"></div>
-        <div class="input-group"><label>秒數</label><input type="number" id="input-seconds" value="30" oninput="updateUI()"></div>
-    </div>
+    <div class="chat-list" id="chat-list"></div>
+</div>
 
-    <hr>
-    <div class="btn-area">
-        <button class="btn-storage" onclick="saveToLocal()">💾 儲存當前草稿</button>
-        <button class="btn-storage" style="background:#95a5a6;" onclick="loadFromLocal()">📂 讀取上次存檔</button>
-    </div>
+<div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
 
-    <hr>
-    <div class="input-group"><label>頭像/背景 (選完後會自動載入)</label>
+<div class="drawer" id="configDrawer">
+    <h3>⚙️ 介面設定</h3>
+    <div class="input-row"><label>成員姓名</label><input type="text" id="input-name" placeholder="例如：石森璃花" oninput="updateUI()"></div>
+    <div class="input-row"><label>你的暱稱</label><input type="text" id="input-nick" placeholder="請輸入暱稱" oninput="updateUI()"></div>
+    <div class="input-row"><label>日期</label><input type="date" id="input-date" oninput="updateUI()"></div>
+    <div style="display: flex; gap: 10px;">
+        <div class="input-row" style="flex:1;"><label>部數</label><input type="text" id="input-part" placeholder="第3部" oninput="updateUI()"></div>
+        <div class="input-row" style="flex:1;"><label>枚數</label><input type="number" id="input-cards" placeholder="3" oninput="updateUI()"></div>
+        <div class="input-row" style="flex:1;"><label>秒數</label><input type="number" id="input-seconds" placeholder="30" oninput="updateUI()"></div>
+    </div>
+    <div class="input-row"><label>更換圖片 (成員/我/背景)</label>
         <input type="file" id="up-member" onchange="previewFile('member')" style="margin-bottom:5px;">
-        <input type="file" id="up-fan" onchange="previewFile('fan')" style="margin-bottom:5px;">
-        <input type="file" id="up-bg" onchange="previewFile('bg')">
+        <input type="file" id="up-fan" onchange="previewFile('fan')">
     </div>
+    <button class="btn btn-main" style="width:100%" onclick="closeAllDrawers()">完成設定</button>
+</div>
 
-    <hr>
-    <div class="input-group"><label>輸入對話文字</label><textarea id="input-msg" rows="3"></textarea></div>
-    <div class="btn-area">
-        <button class="btn-member" onclick="addChat('member')">+ 成員發言</button>
-        <button class="btn-fan" onclick="addChat('fan')">+ 我發言</button>
-        <button style="background:#eee;" onclick="addChat('note')">+ 加入筆記</button>
-        <button class="btn-save" onclick="saveImage()">📸 導出高清不壓縮截圖</button>
+<div class="drawer" id="chatDrawer">
+    <h3>💬 新增對話</h3>
+    <textarea id="input-msg" rows="4" placeholder="輸入內容..."></textarea>
+    <div class="btn-group">
+        <button class="btn btn-sub" onclick="addChat('member')">成員說</button>
+        <button class="btn btn-sub" onclick="addChat('fan')">我說</button>
+    </div>
+    <div class="btn-group">
+        <button class="btn" style="background:#eee" onclick="addChat('note')">旁白筆記</button>
+        <button class="btn" style="background:#333; color:white;" onclick="closeAllDrawers()">關閉</button>
     </div>
 </div>
 
-<div id="capture-area">
-    <div id="bg-overlay"></div>
-    <div class="content-layer">
-        <div class="header-center">
-            <img src="https://via.placeholder.com/150" id="prev-img-member" class="header-avatar">
-            <div id="prev-name" class="header-name">石森璃花</div>
-            <div id="prev-date" class="header-date">2026/01/10</div>
-            <div style="font-size: 12px; color: #333; margin-top: 10px;">👤 ニックネーム</div>
-            <div id="prev-nick" class="header-nick">CoCo</div>
-            
-            <div class="status-corner">
-                <span id="prev-part">第3部</span>
-                <span>🎫<span id="prev-cards">3</span></span>
-                <span>⏱️<span id="prev-seconds">30</span></span>
-            </div>
-        </div>
-
-        <div class="chat-list" id="chat-list"></div>
-    </div>
+<div class="bottom-nav">
+    <button class="nav-btn" onclick="openDrawer('configDrawer')"><span>⚙️</span>設定</button>
+    <button class="nav-btn" onclick="openDrawer('chatDrawer')"><span>💬</span>對話</button>
+    <button class="nav-btn" onclick="saveToLocal()"><span>💾</span>存檔</button>
+    <button class="nav-btn" onclick="loadFromLocal()"><span>📂</span>讀取</button>
+    <button class="nav-btn" onclick="saveImage()" style="color:var(--sakura-pink)"><span>📸</span>截圖</button>
 </div>
 
 <script>
@@ -135,24 +133,31 @@
     let fanAvatar = "https://via.placeholder.com/150";
     let lastType = "";
 
+    function openDrawer(id) {
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeAllDrawers() {
+        document.getElementById('overlay').style.display = 'none';
+        document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active'));
+    }
+
     function updateUI() {
         document.getElementById('prev-name').innerText = document.getElementById('input-name').value;
-        // --- 日期格式化處理 ---
-    const rawDate = document.getElementById('input-date').value; // 格式通常是 YYYY-MM-DD
-    if (rawDate) {
-        const dateObj = new Date(rawDate);
-        const month = dateObj.getMonth() + 1; // 月份從0開始
-        const date = dateObj.getDate();
-        const dayList = ['日', '一', '二', '三', '四', '五', '六'];
-        const dayOfWeek = dayList[dateObj.getDay()];
-        
-        // 組合成 1/10(六) 格式
-        document.getElementById('prev-date').innerText = `${month}/${date}(${dayOfWeek})`;
-    }
         document.getElementById('prev-nick').innerText = document.getElementById('input-nick').value;
+        
+        const rawDate = document.getElementById('input-date').value;
+        if (rawDate) {
+            const dateObj = new Date(rawDate);
+            const dayList = ['日', '一', '二', '三', '四', '五', '六'];
+            document.getElementById('prev-date').innerText = `${dateObj.getMonth()+1}/${dateObj.getDate()}(${dayList[dateObj.getDay()]})`;
+        }
+        
         document.getElementById('prev-part').innerText = document.getElementById('input-part').value;
-        document.getElementById('prev-cards').innerText = document.getElementById('input-cards').value;
-        document.getElementById('prev-seconds').innerText = document.getElementById('input-seconds').value;
+        const cards = document.getElementById('input-cards').value;
+        const seconds = document.getElementById('input-seconds').value;
+        document.getElementById('prev-info-row').innerText = (cards || seconds) ? `🎫${cards} ⏱️${seconds}` : '';
     }
 
     function previewFile(type) {
@@ -161,7 +166,6 @@
         reader.onloadend = () => {
             if (type === 'member') { memberAvatar = reader.result; document.getElementById('prev-img-member').src = reader.result; }
             else if (type === 'fan') { fanAvatar = reader.result; }
-            else { document.getElementById('bg-overlay').style.backgroundImage = `url(${reader.result})`; }
         };
         if (file) reader.readAsDataURL(file);
     }
@@ -171,7 +175,6 @@
         if (!msg && type !== 'note') return;
         const list = document.getElementById('chat-list');
         const div = document.createElement('div');
-        
         if (type === 'note') {
             div.className = 'narration';
             div.innerText = msg;
@@ -179,20 +182,15 @@
         } else {
             const isContinuous = (type === lastType);
             div.className = `chat-item item-${type} ${isContinuous ? 'no-avatar' : ''}`;
-            const avatarHtml = isContinuous ? '' : `<img src="${type === 'member' ? memberAvatar : fanAvatar}" class="chat-avatar">`;
-            
-            div.innerHTML = `
-                <span class="delete-btn" onclick="this.parentElement.remove()">×</span>
-                ${avatarHtml}
-                <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
-            `;
+            div.innerHTML = `<img src="${type === 'member' ? memberAvatar : fanAvatar}" class="chat-avatar" style="${isContinuous?'display:none':''}">
+                             <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
+                             <div style="position:absolute; left:-20px; color:red; font-size:12px;" onclick="this.parentElement.remove()">✕</div>`;
             lastType = type;
         }
         list.appendChild(div);
         document.getElementById('input-msg').value = '';
     }
 
-    // 存檔功能：將文字資訊存入瀏覽器快取
     function saveToLocal() {
         const data = {
             name: document.getElementById('input-name').value,
@@ -201,51 +199,40 @@
             part: document.getElementById('input-part').value,
             cards: document.getElementById('input-cards').value,
             seconds: document.getElementById('input-seconds').value,
-            chats: document.getElementById('chat-list').innerHTML
+            chats: document.getElementById('chat-list').innerHTML,
+            mAv: memberAvatar, fAv: fanAvatar
         };
-        localStorage.setItem('meguri_save', JSON.stringify(data));
-        alert('存檔成功！');
+        localStorage.setItem('meguri_mobile_save', JSON.stringify(data));
+        alert('草稿已儲存');
     }
 
-    // 讀取功能
     function loadFromLocal() {
-        const saved = localStorage.getItem('meguri_save');
+        const saved = localStorage.getItem('meguri_mobile_save');
         if (saved) {
-            const data = JSON.parse(saved);
-            document.getElementById('input-name').value = data.name;
-            document.getElementById('input-nick').value = data.nick;
-            document.getElementById('input-date').value = data.date;
-            document.getElementById('input-part').value = data.part;
-            document.getElementById('input-cards').value = data.cards;
-            document.getElementById('input-seconds').value = data.seconds;
-            document.getElementById('chat-list').innerHTML = data.chats;
+            const d = JSON.parse(saved);
+            document.getElementById('input-name').value = d.name;
+            document.getElementById('input-nick').value = d.nick;
+            document.getElementById('input-date').value = d.date;
+            document.getElementById('input-part').value = d.part;
+            document.getElementById('input-cards').value = d.cards;
+            document.getElementById('input-seconds').value = d.seconds;
+            document.getElementById('chat-list').innerHTML = d.chats;
+            memberAvatar = d.mAv; fanAvatar = d.fAv;
+            document.getElementById('prev-img-member').src = memberAvatar;
             updateUI();
-            alert('讀取完成！');
-        } else {
-            alert('沒有找到存檔紀錄。');
+            alert('讀取成功');
         }
     }
 
-    // 導出截圖：優化不壓縮
     function saveImage() {
-        const target = document.querySelector("#capture-area");
-        const btns = document.querySelectorAll('.delete-btn');
-        btns.forEach(b => b.style.display = 'none');
-
-        html2canvas(target, { 
-            scale: 4, // 提高解析度解決模糊問題
-            useCORS: true, 
-            backgroundColor: "#ffffff",
-            imageTimeout: 0
-        }).then(canvas => {
+        closeAllDrawers();
+        html2canvas(document.querySelector("#capture-area"), { scale: 3, useCORS: true }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `Sakurazaka_Meguri_${document.getElementById('input-name').value}.png`;
-            link.href = canvas.toDataURL("image/png", 1.0);
+            link.download = `Meguri_Log.png`;
+            link.href = canvas.toDataURL("image/png");
             link.click();
-            btns.forEach(b => b.style.display = 'block');
         });
     }
 </script>
-
 </body>
 </html>
