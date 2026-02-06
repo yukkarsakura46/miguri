@@ -6,9 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --bg: #f6f4ff;
       --card-bg: #ffffff;
-      --accent: #f48fb1;
       --accent-soft: #ffe5f0;
       --accent-deep: #f06292;
       --text-main: #333333;
@@ -24,7 +22,7 @@
       padding: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         "Noto Sans TC", "Noto Sans JP", sans-serif;
-      background: radial-gradient(circle at top left, #fff7fb, #eef3ff);
+      background: #f3f4f6;
       color: var(--text-main);
     }
 
@@ -36,7 +34,7 @@
 
     @media (min-width: 768px) {
       .page {
-        padding: 2.5rem 1.5rem 3.5rem;
+        padding: 2.2rem 1.5rem 3.2rem;
       }
     }
 
@@ -46,7 +44,7 @@
 
     header.page-header h1 {
       margin: 0 0 .4rem;
-      font-size: 1.9rem;
+      font-size: 1.8rem;
       display: flex;
       align-items: center;
       gap: .5rem;
@@ -79,9 +77,8 @@
       background: var(--card-bg);
       border-radius: 1rem;
       padding: 1rem 1rem 1.2rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,.04);
-      border: 1px solid rgba(255,255,255,.7);
-      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(15,23,42,.08);
+      border: 1px solid rgba(255,255,255,.8);
     }
 
     .card + .card { margin-top: .75rem; }
@@ -128,7 +125,8 @@
     input[type="text"],
     input[type="date"],
     textarea,
-    select {
+    select,
+    input[type="number"] {
       border-radius: .6rem;
       border: 1px solid var(--border);
       padding: .35rem .5rem;
@@ -179,15 +177,15 @@
     }
 
     .btn-primary {
-      background: linear-gradient(120deg, #ff9ebb, #f48fb1);
+      background: #111827;
       color: white;
       font-weight: 600;
     }
 
     .btn-secondary {
-      background: #f3f3fa;
+      background: #f3f4f6;
       color: var(--text-sub);
-      border: 1px solid #e0e0ea;
+      border: 1px solid #d1d5db;
     }
 
     .btn-danger {
@@ -234,8 +232,8 @@
       min-width: 0;
       border-radius: .75rem;
       padding: .55rem .6rem .65rem;
-      background: #faf7ff;
-      border: 1px dashed #d5cbea;
+      background: #f9fafb;
+      border: 1px dashed #e5e7eb;
     }
 
     .avatar-block-title {
@@ -252,8 +250,8 @@
       padding: .05rem .45rem;
       border-radius: 999px;
       background: white;
-      border: 1px solid #e0d7f5;
-      color: #8576b5;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
     }
 
     .avatar-flex {
@@ -267,7 +265,7 @@
       height: 44px;
       border-radius: 50%;
       background: #ffffff;
-      border: 1px solid #e0e0ea;
+      border: 1px solid #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -292,7 +290,6 @@
       margin-top: .2rem;
     }
 
-    /* 背景圖片設定 */
     .bg-preview {
       margin-top: .4rem;
       font-size: .78rem;
@@ -314,7 +311,7 @@
       text-align: left;
       border-radius: .7rem;
       border: 1px solid transparent;
-      background: #f9f9ff;
+      background: #f9fafb;
       padding: .35rem .55rem;
       display: flex;
       flex-direction: column;
@@ -323,13 +320,13 @@
     }
 
     .session-item:hover {
-      background: #f1edff;
+      background: #edf2ff;
       transform: translateY(-1px);
     }
 
     .session-item.is-active {
-      border-color: var(--accent-deep);
-      background: #ffe9f3;
+      border-color: #111827;
+      background: #e5e7eb;
     }
 
     .session-mainline {
@@ -355,7 +352,7 @@
       padding: .6rem .3rem;
     }
 
-    /* 右側：聊天與場次編輯 */
+    /* 右側 header */
     .session-header-row {
       display: flex;
       flex-wrap: wrap;
@@ -389,10 +386,10 @@
 
     .step-label {
       font-size: .8rem;
-      color: #8c7fb4;
+      color: #6b7280;
       padding: .15rem .6rem;
       border-radius: 999px;
-      background: #f2eeff;
+      background: #f3f4f6;
       display: inline-flex;
       align-items: center;
       gap: .25rem;
@@ -414,33 +411,40 @@
     .meta-chip {
       font-size: .78rem;
       color: var(--text-sub);
-      background: #f7f6ff;
+      background: #f9fafb;
       border-radius: 999px;
       padding: .2rem .6rem;
       display: inline-flex;
       align-items: center;
       gap: .25rem;
-      border: 1px solid #e0def7;
+      border: 1px solid #e5e7eb;
     }
 
-    /* 成員頭像區 */
+    /* 成員頭像區：仿截圖 */
     .member-header {
       display: flex;
       align-items: center;
-      gap: .6rem;
-      margin-bottom: .4rem;
+      justify-content: space-between;
+      margin-bottom: .6rem;
+      gap: .5rem;
+    }
+
+    .member-header-main {
+      flex: 1 1 auto;
+      text-align: center;
     }
 
     .member-header-avatar {
-      width: 52px;
-      height: 52px;
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
-      background: #fff;
-      border: 2px solid #f8c2d7;
+      background: #e5e7eb;
+      border: 3px solid #f3f4f6;
+      margin: 0 auto .4rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
+      font-size: 2rem;
       overflow: hidden;
     }
 
@@ -450,32 +454,68 @@
       object-fit: cover;
     }
 
-    .member-header-info {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-
     .member-header-name {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
     }
 
-    .member-header-sub {
-      font-size: .8rem;
-      color: #777;
+    .member-header-date {
+      font-size: .86rem;
+      color: #6b7280;
+      margin-top: .1rem;
     }
 
-    /* 聊天視窗 */
+    .member-header-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .35rem;
+      margin-right: .2rem;
+      min-width: 52px;
+    }
+
+    .member-stat {
+      display: flex;
+      align-items: center;
+      gap: .2rem;
+      font-size: .9rem;
+      color: #4b5563;
+    }
+
+    .member-stat-icon {
+      font-size: 1.1rem;
+      width: 1.4rem;
+      text-align: center;
+    }
+
+    .member-stat-value {
+      min-width: 1.4rem;
+      text-align: left;
+    }
+
+    @media (max-width: 600px) {
+      .member-header {
+        flex-direction: column;
+        align-items: center;
+      }
+      .member-header-stats {
+        flex-direction: row;
+        justify-content: center;
+        margin-right: 0;
+      }
+    }
+
+    /* 聊天視窗：接近 LINE */
     .chat-container {
-      border-radius: .9rem;
-      background: #f7f6ff;
-      border: 1px solid #dfdcf4;
+      border-radius: 1rem;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
       padding: .5rem;
       display: flex;
       flex-direction: column;
       gap: .35rem;
-      max-height: 380px;
-      min-height: 230px;
+      max-height: 420px;
+      min-height: 250px;
       position: relative;
       overflow: hidden;
       background-size: cover;
@@ -486,7 +526,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(247, 246, 255, 0.9);
+      background: rgba(255,255,255,0.9); /* 背景圖淡淡一層 */
       pointer-events: none;
     }
 
@@ -498,10 +538,10 @@
     .chat-window {
       flex: 1 1 auto;
       overflow-y: auto;
-      padding: .25rem;
+      padding: .2rem;
       display: flex;
       flex-direction: column;
-      gap: .25rem;
+      gap: .2rem;
     }
 
     .msg-row {
@@ -523,11 +563,10 @@
     }
 
     .msg-avatar {
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: #ffffff;
-      border: 1px solid #e0e0ea;
+      background: #e5e7eb;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -543,7 +582,7 @@
     }
 
     .msg-bubble-wrap {
-      max-width: 80%;
+      max-width: 77%;
       display: flex;
       flex-direction: column;
     }
@@ -555,38 +594,36 @@
     }
 
     .msg-bubble {
-  border-radius: 1rem;
-  padding: .06rem .5rem;     /* 上下更薄一點 */
-  font-size: .9rem;
-  line-height: 1.25;         /* 行距稍微縮小 */
-  white-space: pre-wrap;
-  word-break: break-word;
-  display: inline-block;
-}
+      border-radius: 999px;
+      padding: 2px 10px;      /* 緊貼文字 */
+      font-size: .9rem;
+      line-height: 1.25;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: inline-block;
+    }
 
     .msg-bubble--member {
-      background: #ffffff;
-      border-top-left-radius: .25rem;
-      border: 1px solid #e0def2;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
     }
 
     .msg-bubble--me {
-      background: linear-gradient(120deg, #ff9ebb, #f48fb1);
-      color: #fff;
-      border-top-right-radius: .25rem;
-      border: 1px solid #f48fb1;
+      background: #e5f2ff;
+      border: 1px solid #bfdbfe;
     }
 
-    .msg-bubble--narration {
-      background: #ebe6ff;
-      border-radius: 1rem;
-      color: #433b5e;
-      text-align: center;
-      border: 1px solid #d5cff7;
-    }
+    /* 置中描述文字（沒有對話框） */
+.msg-narration-text {
+  font-size: .85rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.4;
+  padding: .15rem .4rem;
+}
 
     .msg-line-jp {
-      margin-bottom: .02rem;
+      margin-bottom: 1px;   /* 幾乎沒有縫隙 */
       font-size: .9rem;
     }
 
@@ -595,20 +632,8 @@
       opacity: .95;
     }
 
-    @media (max-width: 600px) {
-      .msg-bubble {
-        font-size: .9rem;
-      }
-      .msg-line-jp {
-        font-size: .9rem;
-      }
-      .msg-line-zh {
-        font-size: .86rem;
-      }
-    }
-
     .chat-footer {
-      border-top: 1px dashed #d3cff1;
+      border-top: 1px solid #e5e7eb;
       padding-top: .35rem;
       display: flex;
       justify-content: flex-end;
@@ -620,7 +645,7 @@
       margin-top: .65rem;
     }
 
-    /* 彈跳輸入面板：用 class 控制顯示 */
+    /* 彈跳輸入面板 */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -642,9 +667,9 @@
       overflow-y: auto;
       background: #ffffff;
       border-radius: 1rem;
-      box-shadow: 0 18px 45px rgba(0,0,0,.18);
+      box-shadow: 0 18px 45px rgba(15,23,42,.35);
       padding: .9rem .95rem 1rem;
-      border: 1px solid #f4e9ff;
+      border: 1px solid #e5e7eb;
     }
 
     .modal-header {
@@ -666,7 +691,7 @@
     .modal-close-btn {
       border-radius: 999px;
       border: none;
-      background: #f5f3ff;
+      background: #f3f4f6;
       padding: .15rem .5rem;
       font-size: .85rem;
       cursor: pointer;
@@ -679,6 +704,36 @@
       margin-top: .4rem;
       flex-wrap: wrap;
     }
+/* ===== 滿版顯示模式 ===== */
+body.full-view .layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.full-view .layout > :first-child {
+  display: none;             /* 左側列表＆設定隱藏 */
+}
+
+body.full-view .page {
+  max-width: 800px;          /* 中央較窄、像手機截圖 */
+}
+
+body.full-view .card {
+  box-shadow: none;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+/* 聊天區高度放寬，幾乎整頁 */
+body.full-view #chat-container {
+  max-height: none;
+  min-height: 65vh;
+}
+
+/* 頁首簡化一下間距（可視情況調） */
+body.full-view header.page-header {
+  margin-bottom: 0.6rem;
+}
   </style>
 </head>
 <body>
@@ -727,7 +782,7 @@
                 <div class="avatar-controls">
                   <label class="field">
                     <span class="label-text">暱稱（如：CoCo）</span>
-                    <input type="text" id="me-name" placeholder="顯示在右側對話" />
+                    <input type="text" id="me-name" placeholder="顯示在右側氣泡" />
                   </label>
                   <input type="file" id="me-avatar-file" accept="image/*" />
                 </div>
@@ -737,7 +792,7 @@
             <div class="avatar-block">
               <div class="avatar-block-title">
                 ✨ 成員這一側
-                <span class="badge-side">左側氣泡 & 上方頭像</span>
+                <span class="badge-side">左側氣泡 & 頁面上方</span>
               </div>
               <div class="avatar-flex">
                 <div class="avatar-preview" id="member-avatar-preview">
@@ -745,8 +800,8 @@
                 </div>
                 <div class="avatar-controls">
                   <label class="field">
-                    <span class="label-text">暱稱（如：璃花）</span>
-                    <input type="text" id="member-name" placeholder="顯示在對話上方" />
+                    <span class="label-text">暱稱（如：石森璃花）</span>
+                    <input type="text" id="member-name" placeholder="顯示在畫面上方" />
                   </label>
                   <input type="file" id="member-avatar-file" accept="image/*" />
                 </div>
@@ -793,6 +848,9 @@
               </div>
             </div>
             <div class="session-header-actions">
+<button class="btn-secondary btn-small" id="fullscreen-btn" disabled>
+    ⛶ 滿版顯示
+  </button>
               <button class="btn-secondary btn-small" id="new-session-btn">
                 🆕 新建場次
               </button>
@@ -831,28 +889,27 @@
                 <input type="text" id="session-event" placeholder="例如：14th ミーグリ第3次" />
               </label>
               <label class="field">
-  <span class="label-text">部數</span>
-  <select id="session-slot">
-    <option value="">（未選擇）</option>
-    <option value="第1部">第1部</option>
-    <option value="第2部">第2部</option>
-    <option value="第3部">第3部</option>
-    <option value="第4部">第4部</option>
-    <option value="第5部">第5部</option>
-    <option value="第6部">第6部</option>
-  </select>
-</label>
-
+                <span class="label-text">部數</span>
+                <select id="session-slot">
+                  <option value="">（未選擇）</option>
+                  <option value="第1部">第1部</option>
+                  <option value="第2部">第2部</option>
+                  <option value="第3部">第3部</option>
+                  <option value="第4部">第4部</option>
+                  <option value="第5部">第5部</option>
+                  <option value="第6部">第6部</option>
+                </select>
+              </label>
             </div>
 
             <div class="form-row form-row--2col">
               <label class="field">
                 <span class="label-text">枚數</span>
-                <input type="text" id="session-count-input" placeholder="例如：3" />
+                <input type="number" id="session-count-input" placeholder="3" min="1" step="1" />
               </label>
               <label class="field">
                 <span class="label-text">秒數</span>
-                <input type="text" id="session-seconds" placeholder="例如：30" />
+                <input type="number" id="session-seconds" placeholder="30" min="1" step="1" />
               </label>
             </div>
 
@@ -884,14 +941,24 @@
               ② 輸入對話內容
             </div>
 
-            <!-- 成員頭像＋基本 info -->
+            <!-- 成員頭像＋上方資訊 -->
             <div class="member-header">
-              <div class="member-header-avatar" id="header-member-avatar">
-                <span>⭐</span>
-              </div>
-              <div class="member-header-info">
+              <div class="member-header-main">
+                <div class="member-header-avatar" id="header-member-avatar">
+                  <span>⭐</span>
+                </div>
                 <div class="member-header-name" id="header-member-name">成員名稱未填</div>
-                <div class="member-header-sub" id="header-member-sub">部數／枚數／秒數會顯示在這裡</div>
+                <div class="member-header-date" id="header-member-date">--/--/--</div>
+              </div>
+              <div class="member-header-stats">
+                <div class="member-stat">
+                  <span class="member-stat-icon">🧾</span>
+                  <span class="member-stat-value" id="header-count">-</span>
+                </div>
+                <div class="member-stat">
+                  <span class="member-stat-icon">⏱</span>
+                  <span class="member-stat-value" id="header-seconds">-</span>
+                </div>
               </div>
             </div>
 
@@ -906,7 +973,7 @@
 
               <div class="chat-footer">
                 <button class="btn-secondary btn-small" id="back-basic-btn">
-                  ⬅ 返回編輯基本資訊
+                  ⬅ 返回基本資訊
                 </button>
                 <button class="btn-secondary btn-small" id="clear-msg-btn">
                   ♻ 清空本場對話
@@ -1030,7 +1097,9 @@
 
       const headerMemberAvatar = document.getElementById("header-member-avatar");
       const headerMemberName = document.getElementById("header-member-name");
-      const headerMemberSub = document.getElementById("header-member-sub");
+      const headerMemberDate = document.getElementById("header-member-date");
+      const headerCount = document.getElementById("header-count");
+      const headerSeconds = document.getElementById("header-seconds");
 
       const msgModal = document.getElementById("msg-modal");
       const closeMsgModalBtn = document.getElementById("close-msg-modal-btn");
@@ -1041,8 +1110,11 @@
       const addMsgBtn = document.getElementById("add-msg-btn");
 
       const newSessionBtn = document.getElementById("new-session-btn");
-      const deleteSessionBtn = document.getElementById("delete-session-btn");
-      const saveSessionBtn = document.getElementById("save-session-btn");
+const deleteSessionBtn = document.getElementById("delete-session-btn");
+const saveSessionBtn = document.getElementById("save-session-btn");
+const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+let isFullscreen = false;
 
       // ---- Utils ----
       function escapeHtml(str) {
@@ -1061,7 +1133,7 @@
       function formatCountStr(count) {
         if (!count && count !== 0) return "";
         let s = String(count).trim();
-        s = s.replace(/枚$/, "");   // 防止舊資料已經有「枚」
+        s = s.replace(/枚$/, "");
         if (!s) return "";
         return s + "枚";
       }
@@ -1069,7 +1141,7 @@
       function formatSecondsStr(sec) {
         if (!sec && sec !== 0) return "";
         let s = String(sec).trim();
-        s = s.replace(/秒$/, "");   // 防止舊資料已經有「秒」
+        s = s.replace(/秒$/, "");
         if (!s) return "";
         return s + "秒";
       }
@@ -1122,7 +1194,7 @@
         return dateStr;
       }
 
-      // ---- Avatar / Name / Background rendering ----
+      // ---- Avatar / Name / BG ----
       function updateAvatarPreviews() {
         if (settings.meAvatar) {
           meAvatarPreview.innerHTML = '<img src="' + settings.meAvatar + '" alt="me avatar" />';
@@ -1178,6 +1250,19 @@
         };
         reader.readAsDataURL(file);
       }
+      function enterFullscreen() {
+        if (isFullscreen) return;
+        document.body.classList.add("full-view");
+        isFullscreen = true;
+        fullscreenBtn.textContent = "❌ 關閉滿版";
+      }
+
+      function exitFullscreen() {
+        if (!isFullscreen) return;
+        document.body.classList.remove("full-view");
+        isFullscreen = false;
+        fullscreenBtn.textContent = "⛶ 滿版顯示";
+      }
 
       // ---- Step control ----
       function showBasicStep() {
@@ -1206,7 +1291,7 @@
           return (b.createdAt || 0) - (a.createdAt || 0);
         });
 
-             const html = sorted
+        const html = sorted
           .map(r => {
             const activeClass = r.id === editingId ? " is-active" : "";
             const dateText = formatDateForDisplay(r.date);
@@ -1221,14 +1306,14 @@
             if (r.slot) rightPieces.push(r.slot);
             if (countText) rightPieces.push(countText);
             if (secText) rightPieces.push(secText);
-            const secondRight = rightPieces.join(" · ") || (tags.length ? "#" + tags[0] : "");
-
+            const secondRight =
+              rightPieces.join(" · ") || (tags.length ? "#" + tags[0] : "");
 
             return `
               <button class="session-item${activeClass}" data-id="${r.id}">
                 <div class="session-mainline">
                   <span>${escapeHtml(dateText)} ｜ ${escapeHtml(memberText)}</span>
-                  <span style="font-size:.78rem; color:#999;">${r.messages?.length || 0} 則</span>
+                  <span style="font-size:.78rem; color:#6b7280;">${r.messages?.length || 0} 則</span>
                 </div>
                 <div class="session-secondline">
                   <span>${escapeHtml(secondLeft)}</span>
@@ -1282,11 +1367,10 @@
         let subParts = [];
         if (record.eventName) subParts.push(record.eventName);
         if (record.slot) subParts.push(record.slot);
-        if (record.count) subParts.push(formatCountStr(record.count));
-        if (record.seconds) subParts.push(formatSecondsStr(record.seconds));
         sessionSubLine.textContent = subParts.join(" ／ ") || "這一場的詳細資訊還沒寫。";
 
         deleteSessionBtn.disabled = false;
+        fullscreenBtn.disabled = false;
 
         updateMetaPreview();
         updateMemberHeader();
@@ -1311,6 +1395,8 @@
         sessionTitleLine.textContent = "尚未選擇場次";
         sessionSubLine.textContent = "請先新建一場，或在左側點選既有紀錄。";
         deleteSessionBtn.disabled = true;
+        fullscreenBtn.disabled = true;
+        exitFullscreen();   // 回到一般模式
 
         updateMetaPreview();
         updateMemberHeader();
@@ -1333,10 +1419,10 @@
           chips.push('<div class="meta-chip">📅 ' + escapeHtml(dateStr) + "</div>");
         }
         if (slotStr) {
-          chips.push('<div class="meta-chip">🕒 ' + escapeHtml(formatCountStr(countStr)) + "</div>");
+          chips.push('<div class="meta-chip">🕒 ' + escapeHtml(slotStr) + "</div>");
         }
         if (countStr) {
-          chips.push('<div class="meta-chip">🎫 ' + escapeHtml(countStr) + "</div>");
+          chips.push('<div class="meta-chip">🎫 ' + escapeHtml(formatCountStr(countStr)) + "</div>");
         }
         if (secStr) {
           chips.push('<div class="meta-chip">⏱ ' + escapeHtml(formatSecondsStr(secStr)) + "</div>");
@@ -1360,17 +1446,14 @@
           "成員名稱未填";
         headerMemberName.textContent = name;
 
-        const pieces = [];
-        const slotStr = sessionSlot.value.trim();
+        const dateStr = sessionDate.value.trim();
+        headerMemberDate.textContent = dateStr || "--/--/--";
+
         const countStr = sessionCountInput.value.trim();
         const secStr = sessionSeconds.value.trim();
 
-        if (slotStr) pieces.push(slotStr);
-        if (countStr) pieces.push(formatCountStr(countStr));
-        if (secStr) pieces.push(formatSecondsStr(secStr));
-
-        headerMemberSub.textContent =
-          pieces.join(" ／ ") || "部數／枚數／秒數會顯示在這裡";
+        headerCount.textContent = countStr || "-";
+        headerSeconds.textContent = secStr || "-";
       }
 
       // ---- Chat rendering ----
@@ -1411,7 +1494,7 @@
             if (isNarration) {
               return `
                 <div class="msg-row msg-row--narration">
-                  <div class="msg-bubble msg-bubble--narration">
+      <div class="msg-narration-text">
                     ${jpHtml}${zhHtml}
                   </div>
                 </div>
@@ -1494,7 +1577,7 @@
         renderChat();
       }
 
-      // ---- Modal 控制 ----
+      // ---- Modal control ----
       function openMsgModal() {
         msgModal.classList.add("is-open");
         msgRole.value = "member";
@@ -1581,6 +1664,15 @@
       }
 
       // ---- Event listeners ----
+      fullscreenBtn.addEventListener("click", function () {
+        if (!editingId) return;        // 沒選場次就不動
+        if (isFullscreen) {
+          exitFullscreen();
+        } else {
+          enterFullscreen();
+        }
+      });
+
       toggleSettingsBtn.addEventListener("click", function () {
         const visible = displaySettingsCard.style.display !== "none";
         displaySettingsCard.style.display = visible ? "none" : "block";
@@ -1621,7 +1713,7 @@
       });
 
       sessionDate.addEventListener("change", updateMetaPreview);
-      sessionSlot.addEventListener("input", updateMetaPreview);
+      sessionSlot.addEventListener("change", updateMetaPreview);
       sessionCountInput.addEventListener("input", updateMetaPreview);
       sessionSeconds.addEventListener("input", updateMetaPreview);
       sessionTags.addEventListener("input", updateMetaPreview);
@@ -1666,7 +1758,6 @@
       deleteSessionBtn.addEventListener("click", deleteSession);
       newSessionBtn.addEventListener("click", resetSessionForm);
 
-      // 點擊遮罩空白區也關閉 modal
       msgModal.addEventListener("click", function (e) {
         if (e.target === msgModal) {
           closeMsgModal();
