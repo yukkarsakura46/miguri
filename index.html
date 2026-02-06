@@ -10,37 +10,32 @@
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background: #333; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
 
-        /* 主視窗切換控制 */
+        /* 視窗切換 */
         .view-section { display: none; width: 450px; min-height: 100vh; background: white; position: relative; }
         .view-section.active { display: flex; flex-direction: column; }
 
-        /* --- 主畫面樣式 --- */
+        /* 主畫面 */
         #main-dashboard { background: var(--bg-main); padding: 25px; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .add-record-btn { background: var(--sakura-pink); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(244,180,208,0.4); }
         .record-list { display: flex; flex-direction: column; gap: 15px; }
         .record-card { background: white; padding: 18px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .record-info .r-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; color: #333; }
-        .record-info .r-meta { font-size: 0.85rem; color: #999; }
-        .card-actions { display: flex; gap: 10px; }
-        .btn-del { color: #ff3b30; border: none; background: none; padding: 10px; }
+        .record-info .r-title { font-weight: bold; font-size: 1.1rem; color: #333; }
+        .record-info .r-meta { font-size: 0.85rem; color: #999; margin-top: 5px; }
+        .btn-del { color: #ff3b30; border: none; background: none; padding: 10px; cursor: pointer; }
 
-        /* --- 編輯模式預覽面板 --- */
+        /* 編輯預覽區 */
         #capture-area { padding: 20px 20px 100px; flex-grow: 1; background: white; }
         .header-center { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #f2f2f7; padding-bottom: 15px; position: relative; }
-        
         .avatar-container { width: 85px; height: 85px; border-radius: 50%; overflow: hidden; margin: 0 auto 10px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
         .header-avatar { width: 100%; height: 100%; object-fit: cover; }
-        
         .header-name { font-size: 20px; font-weight: bold; margin: 0; }
         .header-date { font-size: 12px; color: var(--text-gray); margin-top: 2px; }
         .nick-label { font-size: 11px; margin-top: 5px; color: #333; }
         .header-nick { font-size: 18px; font-weight: bold; color: var(--nick-green); margin-top: 0; }
-        
         .status-corner { position: absolute; right: 0; bottom: 5px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 11px; color: var(--text-gray); }
-        .status-item { display: flex; align-items: center; gap: 4px; }
 
-        /* 對話樣式 */
+        /* 對話列表 */
         .chat-list { display: flex; flex-direction: column; gap: 8px; }
         .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; }
         .item-member { align-self: flex-start; }
@@ -48,41 +43,31 @@
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .item-member .chat-avatar { margin-right: 12px; }
         .item-fan .chat-avatar { margin-left: 12px; }
-        .bubble { padding: 11px 16px; font-size: 15px; border-radius: 18px; line-height: 1.4; }
-        .item-member .bubble { background: #fff; border: 1px solid #efeff4; border-top-left-radius: 4px; }
+        .bubble { padding: 11px 16px; font-size: 15px; border-radius: 18px; line-height: 1.4; border: 1px solid transparent; }
+        .item-member .bubble { background: #fff; border-color: #efeff4; border-top-left-radius: 4px; }
         .item-fan .bubble { background: #f0f0f0; border-top-right-radius: 4px; }
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
-        
-        /* 其他/OS 樣式 */
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
-        .item-other .bubble { background: transparent; color: #ced4da; font-size: 12px; text-align: center; padding: 5px 20px; border: none; }
+        .item-other .bubble { background: transparent; color: #ced4da; font-size: 12px; text-align: center; border: none; }
 
-        /* 裁剪視窗 */
+        /* 裁剪 */
         #crop-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; align-items: center; justify-content: center; }
         .crop-viewport { width: 300px; height: 300px; border: 1px solid #fff; position: relative; overflow: hidden; }
         .crop-circle-mask { position: absolute; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 1000px rgba(0,0,0,0.5); z-index: 3; pointer-events: none; }
-        .grid-line { position: absolute; background: rgba(255,255,255,0.4); z-index: 2; }
-        .v1 { left: 33%; top: 0; width: 1px; height: 100%; } .v2 { left: 66%; top: 0; width: 1px; height: 100%; }
-        .h1 { top: 33%; left: 0; height: 1px; width: 100%; } .h2 { top: 66%; left: 0; height: 1px; width: 100%; }
-        #preview-img-raw { position: absolute; cursor: move; touch-action: none; width: auto; height: auto; }
+        #preview-img-raw { position: absolute; cursor: move; touch-action: none; }
 
-        /* 面板控制 (設定與對話) */
+        /* 控制面板 */
         .drawer { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 450px; background: white; transition: 0.3s; z-index: 500; border-radius: 20px 20px 0 0; padding: 15px 20px; box-shadow: 0 -5px 25px rgba(0,0,0,0.2); }
         .drawer.active { bottom: 0; }
-        .drawer h3 { margin: 0 0 10px 0; font-size: 16px; }
-
-        input, select, textarea { width: 100%; padding: 8px 10px; margin-bottom: 6px; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; box-sizing: border-box; max-width: 100%; }
-        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; width: 100%; }
-        .config-grid input, .config-grid select { margin-bottom: 0; }
-
+        input, select, textarea { width: 100%; padding: 8px 10px; margin-bottom: 6px; font-size: 14px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
         .drawer-btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
         .drawer-btn-group button { flex: 1; padding: 8px; font-size: 13px; border-radius: 6px; border: 1px solid #eee; background: white; cursor: pointer; }
-
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 400; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 450px; background: white; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #eee; z-index: 300; }
         .nav-btn { background: none; border: none; font-size: 11px; cursor: pointer; color: #666; }
         .back-nav { background: #eee; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 400; }
     </style>
 </head>
 <body>
@@ -97,26 +82,23 @@
 
 <div id="edit-view" class="view-section">
     <div class="back-nav" onclick="backToDash()">⬅ 返回主畫面</div>
-    
     <div id="capture-area">
         <div class="header-center">
             <div class="avatar-container" onclick="triggerFile('member')">
-                <img src="https://via.placeholder.com/150" id="prev-img-member" class="header-avatar">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" id="prev-img-member" class="header-avatar">
             </div>
             <div id="prev-name" class="header-name">成員</div>
             <div id="prev-date" class="header-date">日期</div>
             <div class="nick-label">👤 ニックネーム</div>
             <div id="prev-nick" class="header-nick">暱稱</div>
-            
             <div class="status-corner">
-                <div id="prev-part" class="status-item"></div>
-                <div id="prev-cards" class="status-item"></div>
-                <div id="prev-seconds" class="status-item"></div>
+                <div id="prev-part"></div>
+                <div id="prev-cards"></div>
+                <div id="prev-seconds"></div>
             </div>
         </div>
         <div class="chat-list" id="chat-list"></div>
     </div>
-
     <div class="bottom-nav">
         <button class="nav-btn" onclick="openDrawer('configDrawer')">⚙️設定</button>
         <button class="nav-btn" onclick="openDrawer('chatDrawer')">💬對話</button>
@@ -125,7 +107,7 @@
 </div>
 
 <div id="crop-modal">
-    <div class="crop-viewport"><img id="preview-img-raw" src=""><div class="grid-line v1"></div><div class="grid-line v2"></div><div class="grid-line h1"></div><div class="grid-line h2"></div><div class="crop-circle-mask"></div></div>
+    <div class="crop-viewport"><img id="preview-img-raw" src=""><div class="crop-circle-mask"></div></div>
     <div style="margin-top:30px; display:flex; gap:20px;">
         <button onclick="closeCrop()" style="color:white; background:none; border:1px solid #fff; padding:10px 20px; border-radius:20px;">取消</button>
         <button onclick="confirmCrop()" style="background:white; border:none; padding:10px 20px; border-radius:20px;">確定</button>
@@ -148,12 +130,8 @@
     <div class="config-grid">
         <select id="input-part" onchange="liveUpdate()">
             <option value="">部數</option>
-            <option value="第1部">第1部</option>
-            <option value="第2部">第2部</option>
-            <option value="第3部">第3部</option>
-            <option value="第4部">第4部</option>
-            <option value="第5部">第5部</option>
-            <option value="第6部">第6部</option>
+            <option value="第1部">第1部</option><option value="第2部">第2部</option><option value="第3部">第3部</option>
+            <option value="第4部">第4部</option><option value="第5部">第5部</option><option value="第6部">第6部</option>
         </select>
         <input type="text" id="input-cards" placeholder="枚數" oninput="liveUpdate()">
         <input type="text" id="input-seconds" placeholder="秒數" oninput="liveUpdate()">
@@ -161,12 +139,12 @@
 </div>
 
 <div class="drawer" id="chatDrawer">
-    <h3>💬 新增內容</h3>
-    <textarea id="input-msg" rows="3" style="width:100%; padding:10px; margin-bottom:10px;"></textarea>
+    <h3>💬 新增對話</h3>
+    <textarea id="input-msg" rows="3" placeholder="輸入對話內容..."></textarea>
     <div style="display:flex; gap:10px;">
-        <button onclick="addChat('member')" style="flex:1; padding:10px; background:white; border:1px solid #ddd; border-radius:8px;">成員</button>
-        <button onclick="addChat('fan')" style="flex:1; padding:10px; background:#eee; border:none; border-radius:8px;">我</button>
-        <button onclick="addChat('other')" style="flex:1; padding:10px; background:#dcdde1; border:none; border-radius:8px;">其他</button>
+        <button onclick="addChat('member')" style="flex:1; padding:12px; background:white; border:1px solid #ddd; border-radius:8px;">成員</button>
+        <button onclick="addChat('fan')" style="flex:1; padding:12px; background:#eee; border:none; border-radius:8px;">我</button>
+        <button onclick="addChat('other')" style="flex:1; padding:12px; background:#dcdde1; border:none; border-radius:8px;">其他</button>
     </div>
 </div>
 
@@ -175,13 +153,12 @@
     let mAv = "", fAv = "", lastT = "";
     let uploadTarget = "";
 
-    function getDB() { return JSON.parse(localStorage.getItem('sakura_v10_db') || "[]"); }
-    function saveDB(db) { localStorage.setItem('sakura_v10_db', JSON.stringify(db)); }
+    const getDB = () => JSON.parse(localStorage.getItem('sakura_v10_db') || "[]");
+    const saveDB = (db) => localStorage.setItem('sakura_v10_db', JSON.stringify(db));
 
     function renderRecordList() {
         const db = getDB();
         const container = document.getElementById('record-list');
-        if(!container) return;
         container.innerHTML = db.length === 0 ? '<p style="text-align:center; color:#999; margin-top:20px;">目前沒有記錄。</p>' : '';
         [...db].reverse().forEach(r => {
             const card = document.createElement('div');
@@ -189,7 +166,7 @@
             card.onclick = () => loadEditView(r.id);
             card.innerHTML = `
                 <div class="record-info">
-                    <div class="r-title">${r.name || '成員'} ${r.single ? `<span style="font-size:0.8rem; color:var(--sakura-pink); font-weight:normal;">[${r.single}]</span>` : ''}</div>
+                    <div class="r-title">${r.name || '成員'} ${r.single ? `<span style="font-size:0.8rem; color:var(--sakura-pink);">[${r.single}]</span>` : ''}</div>
                     <div class="r-meta">${r.date || '無日期'} | ${r.part || ''}</div>
                 </div>
                 <div class="card-actions"><button class="btn-del" onclick="event.stopPropagation(); deleteRecord(${r.id})">🗑️</button></div>
@@ -201,7 +178,8 @@
     function createNewRecord() {
         const id = Date.now();
         const db = getDB();
-        db.push({ id, name: "", single: "", date: "", part: "", chats: "", mAv: "", fAv: "", nick: "", cards: "", seconds: "" });
+        const defaultNick = localStorage.getItem('default_nickname') || "";
+        db.push({ id, name: "", single: "", date: "", part: "", chats: "", mAv: "", fAv: "", nick: defaultNick, cards: "", seconds: "" });
         saveDB(db);
         loadEditView(id);
     }
@@ -216,8 +194,6 @@
         currentRecordId = id;
         const db = getDB();
         const r = db.find(item => item.id === id);
-        
-        // 安全填充輸入框，防止不存在時報錯
         const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ""; };
         setVal('input-single', r.single);
         setVal('input-name', r.name);
@@ -226,62 +202,48 @@
         setVal('input-part', r.part);
         setVal('input-cards', r.cards);
         setVal('input-seconds', r.seconds);
-        
         document.getElementById('chat-list').innerHTML = r.chats || "";
-        mAv = r.mAv; fAv = r.fAv;
-        document.getElementById('prev-img-member').src = mAv || "https://via.placeholder.com/150";
-        
+        mAv = r.mAv || ""; fAv = r.fAv || "";
+        document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
         liveUpdate();
         document.getElementById('main-dashboard').classList.remove('active');
         document.getElementById('edit-view').classList.add('active');
     }
 
     function backToDash() {
-    // 先執行存檔
-    autoSave();
-    
-    // 強制切換 class，確保畫面一定會跳轉
-    const editView = document.getElementById('edit-view');
-    const dashView = document.getElementById('main-dashboard');
-    
-    if (editView && dashView) {
-        editView.classList.remove('active');
-        dashView.classList.add('active');
-        // 渲染包含「單曲名稱」的主畫面清單
+        autoSave();
+        document.getElementById('edit-view').classList.remove('active');
+        document.getElementById('main-dashboard').classList.add('active');
         renderRecordList(); 
     }
-}
 
     function autoSave() {
-    if(!currentRecordId) return;
-    const db = getDB();
-    const idx = db.findIndex(r => r.id === currentRecordId);
-    if(idx === -1) return;
-    
-    const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-
-    db[idx] = {
-        ...db[idx],
-        name: getVal('input-name'),
-        single: getVal('input-single'), // 儲存單曲名稱
-        nick: getVal('input-nick'),
-        date: getVal('input-date'),
-        part: getVal('input-part'),
-        cards: getVal('input-cards'),
-        seconds: getVal('input-seconds'),
-        chats: document.getElementById('chat-list').innerHTML,
-        mAv: mAv, // 確保成員頭像數據被存入
-        fAv: fAv  // 確保粉絲頭像數據被存入
-    };
-    saveDB(db);
-}
+        if(!currentRecordId) return;
+        const db = getDB();
+        const idx = db.findIndex(r => r.id === currentRecordId);
+        if(idx === -1) return;
+        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+        const nickValue = getVal('input-nick');
+        db[idx] = {
+            ...db[idx],
+            name: getVal('input-name'),
+            single: getVal('input-single'),
+            nick: nickValue,
+            date: getVal('input-date'),
+            part: getVal('input-part'),
+            cards: getVal('input-cards'),
+            seconds: getVal('input-seconds'),
+            chats: document.getElementById('chat-list').innerHTML,
+            mAv, fAv
+        };
+        saveDB(db);
+        if(nickValue) localStorage.setItem('default_nickname', nickValue);
+    }
 
     function liveUpdate() {
         const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-        
         document.getElementById('prev-name').innerText = getVal('input-name') || "成員";
         document.getElementById('prev-nick').innerText = getVal('input-nick') || "暱稱";
-        
         const dateVal = getVal('input-date');
         if (dateVal) {
             const dateObj = new Date(dateVal);
@@ -290,14 +252,11 @@
         } else {
             document.getElementById('prev-date').innerText = "日期";
         }
-
-        // 右側預覽 (圖案 + 單位)
-        document.getElementById('prev-part').innerText = getVal('input-part');
+        document.getElementById('prev-part').innerText = getVal('input-part') || "";
         const cards = getVal('input-cards');
         document.getElementById('prev-cards').innerText = cards ? `🎫 ${cards} 枚` : "";
         const seconds = getVal('input-seconds');
         document.getElementById('prev-seconds').innerText = seconds ? `⏱️ ${seconds} 秒` : "";
-        
         autoSave();
     }
 
@@ -312,14 +271,15 @@
         } else {
             const isC = (type === lastT);
             div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
-            div.innerHTML = `<span style="position:absolute; top:0; ${type==='member'?'right': 'left'}:-25px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>${!isC ? `<img src="${type==='member' ? mAv : fAv}" class="chat-avatar">` : ''}<div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
+            const avatar = type === 'member' ? mAv : fAv;
+            const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+            div.innerHTML = `<span style="position:absolute; top:0; ${type==='member'?'right': 'left'}:-25px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}<div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
         }
         list.appendChild(div); lastT = type; document.getElementById('input-msg').value = '';
         autoSave();
     }
 
     function triggerFile(t) { uploadTarget = t; document.getElementById('real-file-input').click(); }
-    
     function handleFile(i) {
         const file = i.files[0];
         if(file) {
@@ -328,14 +288,11 @@
                 const img = document.getElementById('preview-img-raw');
                 img.src = e.target.result; 
                 document.getElementById('crop-modal').style.display = 'flex'; 
-                
                 img.onload = function() {
-                    // 自動將圖片縮小到適合裁切框的大小 (300px)
                     const scale = 300 / Math.min(img.naturalWidth, img.naturalHeight);
                     img.style.width = (img.naturalWidth * scale) + "px";
                     img.style.height = (img.naturalHeight * scale) + "px";
-                    img.style.top = '0px';
-                    img.style.left = '0px';
+                    img.style.top = '0px'; img.style.left = '0px';
                 };
             };
             reader.readAsDataURL(file);
@@ -345,87 +302,39 @@
     let isD = false; const rawI = document.getElementById('preview-img-raw');
     rawI.onmousedown = () => isD = true; window.onmouseup = () => isD = false;
     window.onmousemove = e => { if(isD) { rawI.style.left = (rawI.offsetLeft + e.movementX) + 'px'; rawI.style.top = (rawI.offsetTop + e.movementY) + 'px'; } };
-    
-    // 支援觸控拖曳
     rawI.ontouchstart = () => isD = true; rawI.ontouchend = () => isD = false;
-    rawI.ontouchmove = e => { 
-        if(isD) {
-            const touch = e.touches[0];
-            rawI.style.left = (rawI.offsetLeft + (touch.clientX - (rawI.lastX || touch.clientX))) + 'px';
-            rawI.style.top = (rawI.offsetTop + (touch.clientY - (rawI.lastY || touch.clientY))) + 'px';
-            rawI.lastX = touch.clientX; rawI.lastY = touch.clientY;
-        }
-    };
+    rawI.ontouchmove = e => { if(isD) { const touch = e.touches[0]; rawI.style.left = (rawI.offsetLeft + (touch.clientX - (rawI.lastX || touch.clientX))) + 'px'; rawI.style.top = (rawI.offsetTop + (touch.clientY - (rawI.lastY || touch.clientY))) + 'px'; rawI.lastX = touch.clientX; rawI.lastY = touch.clientY; } };
 
     function confirmCrop() {
-    // 1. 建立畫布來進行壓縮
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // 設定壓縮後的目標尺寸 (建議 200~300px，既清晰又省空間)
-    const targetSize = 200;
-    canvas.width = targetSize;
-    canvas.height = targetSize;
-
-    // 計算原始圖片在裁切框中的縮放比例與位移
-    const img = document.getElementById('preview-img-raw');
-    const rect = img.getBoundingClientRect();
-    const viewport = document.querySelector('.crop-viewport').getBoundingClientRect();
-
-    // 取得圖片在畫布上的相對位置
-    const scaleX = img.naturalWidth / rect.width;
-    const scaleY = img.naturalHeight / rect.height;
-    
-    const x = (viewport.left - rect.left) * scaleX;
-    const y = (viewport.top - rect.top) * scaleY;
-    const width = viewport.width * scaleX;
-    const height = viewport.height * scaleY;
-
-    // 2. 繪製到畫布並縮小
-    ctx.drawImage(img, x, y, width, height, 0, 0, targetSize, targetSize);
-
-    // 3. 輸出壓縮後的 Base64 (品質設定為 0.7 效果最好)
-    const compressedData = canvas.toDataURL("image/jpeg", 0.7);
-
-    // 4. 存入變數並更新預覽
-    if (uploadTarget === 'member') {
-        mAv = compressedData;
-        document.getElementById('prev-img-member').src = mAv;
-    } else {
-        fAv = compressedData;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const targetSize = 200;
+        canvas.width = targetSize; canvas.height = targetSize;
+        const img = document.getElementById('preview-img-raw');
+        const rect = img.getBoundingClientRect();
+        const viewport = document.querySelector('.crop-viewport').getBoundingClientRect();
+        const scaleX = img.naturalWidth / rect.width;
+        const scaleY = img.naturalHeight / rect.height;
+        const x = (viewport.left - rect.left) * scaleX;
+        const y = (viewport.top - rect.top) * scaleY;
+        const width = viewport.width * scaleX;
+        const height = viewport.height * scaleY;
+        ctx.drawImage(img, x, y, width, height, 0, 0, targetSize, targetSize);
+        const compressedData = canvas.toDataURL("image/jpeg", 0.7);
+        if (uploadTarget === 'member') { mAv = compressedData; document.getElementById('prev-img-member').src = mAv; } 
+        else { fAv = compressedData; }
+        closeCrop(); autoSave();
     }
-
-    closeCrop();
-    
-    // 5. 立即執行存檔，確保資料寫入 localStorage
-    try {
-        autoSave();
-    } catch (e) {
-        console.error("存檔失敗，請嘗試刪除部分舊紀錄", e);
-    }
-}
-    function closeCrop() { document.getElementById('crop-modal').style.display='none'; }
-
-    function openDrawer(id) { document.getElementById('overlay').style.display='block'; document.getElementById(id).classList.add('active'); }
-    function closeAllDrawers() { document.getElementById('overlay').style.display='none'; document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('active')); }
-    
+    function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
+    function openDrawer(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).classList.add('active'); }
+    function closeAllDrawers() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); }
     function takeShot() {
         closeAllDrawers();
-        const area = document.querySelector("#capture-area");
-        html2canvas(area, { 
-            scale: 4, 
-            useCORS: true,
-            backgroundColor: "#ffffff"
-        }).then(c => {
-            const a = document.createElement('a'); 
-            a.download='Meguri_Log_' + Date.now() + '.png'; 
-            a.href=c.toDataURL("image/png", 1.0); 
-            a.click();
+        html2canvas(document.querySelector("#capture-area"), { scale: 4, useCORS: true, backgroundColor: "#ffffff" }).then(c => {
+            const a = document.createElement('a'); a.download = 'Meguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
         });
     }
-
     document.addEventListener('DOMContentLoaded', renderRecordList);
 </script>
-
 </body>
 </html>
