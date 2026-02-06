@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>ミーグリ左右對話紀錄</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f6f4ff;
+      --card-bg: #ffffff;
+      --accent: #f48fb1;
+      --accent-soft: #ffe5f0;
+      --accent-deep: #f06292;
+      --text-main: #333333;
+      --text-sub: #666666;
+      --border: #dddff0;
+      --danger: #e57373;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans TC", "Noto Sans JP", sans-serif;
+      background: radial-gradient(circle at top left, #fff7fb, #eef3ff);
+      color: var(--text-main);
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 2.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .page {
+        padding: 2.5rem 1.5rem 3.5rem;
+      }
+    }
+
+    header.page-header {
+      margin-bottom: 1.5rem;
+    }
+
+    header.page-header h1 {
+      margin: 0 0 .4rem;
+      font-size: 1.9rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    header.page-header h1 span.emoji {
+      font-size: 1.7rem;
+    }
+
+    header.page-header p {
+      margin: 0;
+      color: var(--text-sub);
+      font-size: .95rem;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.35fr);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 1rem;
+      padding: 1rem 1rem 1.2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.04);
+      border: 1px solid rgba(255,255,255,.7);
+      backdrop-filter: blur(10px);
+    }
+
+    .card + .card { margin-top: .75rem; }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+
+    .pill {
+      font-size: .72rem;
+      padding: .15rem .6rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-deep);
+      white-space: nowrap;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+      font-size: .85rem;
+      color: var(--text-sub);
+      margin-bottom: .5rem;
+    }
+
+    label.field span.label-text {
+      display: flex;
+      align-items: center;
+      gap: .25rem;
+    }
+
+    label.field span.required {
+      color: #ef5350;
+      font-size: .75rem;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+      border-radius: .6rem;
+      border: 1px solid var(--border);
+      padding: .4rem .55rem;
+      font-size: .9rem;
+      font-family: inherit;
+      background: rgba(255,255,255,.9);
+      min-height: 2.1rem;
+      resize: vertical;
+    }
+
+    textarea {
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent-deep);
+    }
+
+    .field-hint {
+      font-size: .75rem;
+      color: #999;
+    }
+
+    .form-row {
+      display: grid;
+      gap: .5rem;
+    }
+
+    @media (min-width: 720px) {
+      .form-row--2col {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 999px;
+      border: none;
+      padding: .4rem 1rem;
+      font-size: .85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(120deg, #ff9ebb, #f48fb1);
+      color: white;
+      font-weight: 600;
+    }
+
+    .btn-secondary {
+      background: #f3f3fa;
+      color: var(--text-sub);
+      border: 1px solid #e0e0ea;
+    }
+
+    .btn-danger {
+      background: rgba(229, 115, 115, .08);
+      color: var(--danger);
+      border: 1px solid rgba(229,115,115,.5);
+    }
+
+    .btn-small {
+      padding: .25rem .7rem;
+      font-size: .78rem;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: default;
+    }
+
+    .small-text {
+      font-size: .75rem;
+      color: #999;
+      margin-top: .4rem;
+    }
+
+    /* 設定區：頭像 & 暱稱 */
+    .avatar-row {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+
+    .avatar-block {
+      flex: 1 1 180px;
+      min-width: 0;
+      border-radius: .75rem;
+      padding: .55rem .6rem .65rem;
+      background: #faf7ff;
+      border: 1px dashed #d5cbea;
+    }
+
+    .avatar-block-title {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .85rem;
+      font-weight: 600;
+      margin-bottom: .4rem;
+    }
+
+    .avatar-block-title span.badge-side {
+      font-size: .72rem;
+      padding: .05rem .45rem;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #e0d7f5;
+      color: #8576b5;
+    }
+
+    .avatar-flex {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .avatar-preview {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e0e0ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      overflow: hidden;
+    }
+
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .avatar-controls {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .avatar-controls input[type="file"] {
+      font-size: .7rem;
+      margin-top: .2rem;
+    }
+
+    /* 場次列表 */
+    #session-list {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: .2rem;
+    }
+
+    .session-item {
+      width: 100%;
+      text-align: left;
+      border-radius: .7rem;
+      border: 1px solid transparent;
+      background: #f9f9ff;
+      padding: .35rem .55rem;
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+      transition: background .15s, border-color .15s, transform .08s;
+    }
+
+    .session-item:hover {
+      background: #f1edff;
+      transform: translateY(-1px);
+    }
+
+    .session-item.is-active {
+      border-color: var(--accent-deep);
+      background: #ffe9f3;
+    }
+
+    .session-mainline {
+      font-size: .85rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      gap: .4rem;
+    }
+
+    .session-secondline {
+      font-size: .75rem;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      gap: .4rem;
+    }
+
+    .empty-hint {
+      font-size: .8rem;
+      color: #999;
+      text-align: center;
+      padding: .6rem .3rem;
+    }
+
+    /* 右側：聊天與場次編輯 */
+    .session-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+
+    .session-header-main {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+
+    .session-title-line {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .session-sub-line {
+      font-size: .8rem;
+      color: var(--text-sub);
+    }
+
+    .session-header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: .4rem;
+      margin-bottom: .6rem;
+    }
+
+    @media (min-width: 720px) {
+      .meta-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .meta-chip {
+      font-size: .78rem;
+      color: var(--text-sub);
+      background: #f7f6ff;
+      border-radius: 999px;
+      padding: .2rem .6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      border: 1px solid #e0def7;
+    }
+
+    /* 聊天視窗 */
+    .chat-container {
+      border-radius: .9rem;
+      background: #f7f6ff;
+      border: 1px solid #dfdcf4;
+      padding: .5rem;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      max-height: 360px;
+      min-height: 220px;
+    }
+
+    .chat-window {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: .25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: .35rem;
+      align-items: flex-end;
+    }
+
+    .msg-row--member {
+      justify-content: flex-start;
+    }
+
+    .msg-row--me {
+      justify-content: flex-end;
+    }
+
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid #e0e0ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .msg-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .msg-bubble-wrap {
+      max-width: 78%;
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .msg-name {
+      font-size: .72rem;
+      color: #888;
+    }
+
+    .msg-bubble {
+      border-radius: 1rem;
+      padding: .4rem .6rem;
+      font-size: .85rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg-bubble--member {
+      background: #ffffff;
+      border-top-left-radius: .25rem;
+      border: 1px solid #e0def2;
+    }
+
+    .msg-bubble--me {
+      background: linear-gradient(120deg, #ff9ebb, #f48fb1);
+      color: #fff;
+      border-top-right-radius: .25rem;
+      border: 1px solid #f48fb1;
+    }
+
+    .msg-line-jp {
+      margin-bottom: .2rem;
+      font-size: .86rem;
+    }
+
+    .msg-line-zh {
+      font-size: .8rem;
+      opacity: .9;
+    }
+
+    .chat-input-row {
+      border-top: 1px dashed #d3cff1;
+      padding-top: .3rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: .35rem;
+    }
+
+    @media (min-width: 720px) {
+      .chat-input-row {
+        grid-template-columns: 130px minmax(0, 1fr) 110px;
+        align-items: flex-start;
+      }
+    }
+
+    .chat-input-role {
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+      font-size: .78rem;
+      color: var(--text-sub);
+    }
+
+    .chat-input-role select {
+      font-size: .85rem;
+    }
+
+    .chat-input-text textarea {
+      min-height: 50px;
+      font-size: .85rem;
+    }
+
+    .chat-input-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .3rem;
+      justify-content: flex-end;
+    }
+
+    .note-area {
+      margin-top: .65rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <h1>
+        <span class="emoji">💬</span>
+        ミーグリ左右對話紀錄
+      </h1>
+      <p>
+        以「聊天視窗」的方式記錄每一場ミーグリ。  
+        可以設定自己和成員的暱稱與頭像，一則訊息包含「日文原文＋中文翻譯」，所有資料都只存這台電腦的瀏覽器（localStorage），不會上傳。
+      </p>
+    </header>
+
+    <div class="layout">
+      <!-- 左側：設定 & 場次列表 -->
+      <div>
+        <!-- 顯示設定 -->
+        <section class="card">
+          <div class="card-title">
+            顯示設定
+            <span class="pill">本機儲存</span>
+          </div>
+
+          <div class="avatar-row">
+            <div class="avatar-block">
+              <div class="avatar-block-title">
+                🫶 我這一側
+                <span class="badge-side">右側氣泡</span>
+              </div>
+              <div class="avatar-flex">
+                <div class="avatar-preview" id="me-avatar-preview">
+                  <span>🙂</span>
+                </div>
+                <div class="avatar-controls">
+                  <label class="field">
+                    <span class="label-text">暱稱（如：CoCo）</span>
+                    <input type="text" id="me-name" placeholder="顯示在右側對話上方" />
+                  </label>
+                  <input type="file" id="me-avatar-file" accept="image/*" />
+                </div>
+              </div>
+            </div>
+
+            <div class="avatar-block">
+              <div class="avatar-block-title">
+                ✨ 成員這一側
+                <span class="badge-side">左側氣泡</span>
+              </div>
+              <div class="avatar-flex">
+                <div class="avatar-preview" id="member-avatar-preview">
+                  <span>⭐</span>
+                </div>
+                <div class="avatar-controls">
+                  <label class="field">
+                    <span class="label-text">暱稱（如：璃花）</span>
+                    <input type="text" id="member-name" placeholder="顯示在左側對話上方" />
+                  </label>
+                  <input type="file" id="member-avatar-file" accept="image/*" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="small-text">
+            頭像跟暱稱會套用到所有場次。要換風格時再改就好 (๑˃̵ᴗ˂̵)
+          </div>
+        </section>
+
+        <!-- 場次列表 -->
+        <section class="card">
+          <div class="card-title">
+            場次列表
+            <span class="pill" id="session-count">0 場</span>
+          </div>
+          <div id="session-list">
+            <div class="empty-hint">
+              還沒有任何紀錄。先在右邊按「新建場次」，或是直接編輯一場吧。
+            </div>
+          </div>
+          <div class="small-text">
+            提示：可以一場寫一張券，或把同一部的內容合併在同一場，自由使用。
+          </div>
+        </section>
+      </div>
+
+      <!-- 右側：場次編輯 + 聊天視窗 -->
+      <div>
+        <section class="card">
+          <div class="session-header-row">
+            <div class="session-header-main">
+              <div class="session-title-line" id="session-title-line">
+                尚未選擇場次
+              </div>
+              <div class="session-sub-line" id="session-sub-line">
+                請先新建一場，或在左側點選既有紀錄。
+              </div>
+            </div>
+            <div class="session-header-actions">
+              <button class="btn-secondary btn-small" id="new-session-btn">
+                🆕 新建場次
+              </button>
+              <button class="btn-danger btn-small" id="delete-session-btn" disabled>
+                🗑 刪除此場
+              </button>
+            </div>
+          </div>
+
+          <!-- 場次基本資訊 -->
+          <div class="form-row form-row--2col">
+            <label class="field">
+              <span class="label-text">
+                日期
+                <span class="required">必填</span>
+              </span>
+              <input type="date" id="session-date" />
+            </label>
+            <label class="field">
+              <span class="label-text">
+                成員名稱
+                <span class="required">必填</span>
+              </span>
+              <input type="text" id="session-member" placeholder="例如：石森璃花" />
+            </label>
+          </div>
+
+          <div class="form-row form-row--2col">
+            <label class="field">
+              <span class="label-text">活動名稱／單</span>
+              <input type="text" id="session-event" placeholder="例如：14th ミーグリ第3次" />
+            </label>
+            <label class="field">
+              <span class="label-text">場次／部數</span>
+              <input type="text" id="session-slot" placeholder="例如：第3部" />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label class="field">
+              <span class="label-text">話題重點</span>
+              <input type="text" id="session-topic" placeholder="例如：生日、blog、初選抜" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="label-text">標籤</span>
+            <input type="text" id="session-tags" placeholder="用空格分開，例如：生日 初選抜 BACKS" />
+            <span class="field-hint">會用來顯示在左側列表的小標記，純粹給自己看。</span>
+          </label>
+
+          <div class="meta-grid" id="meta-preview">
+            <!-- 之後用 JS 填入預覽 chip（日期、場次等） -->
+          </div>
+
+          <!-- 聊天視窗 -->
+          <div class="chat-container">
+            <div class="chat-window" id="chat-window">
+              <div class="empty-hint">
+                還沒有任何訊息。下方選擇「誰說的」，輸入日文原文／中文翻譯，按「加入訊息」就會出現在這裡。  
+                可以先只打日文，中文之後慢慢補也沒問題〜
+              </div>
+            </div>
+
+            <div class="chat-input-row">
+              <div class="chat-input-role">
+                <span>誰說的？</span>
+                <select id="msg-role">
+                  <option value="member">成員（左側）</option>
+                  <option value="me">我（右側）</option>
+                </select>
+              </div>
+
+              <div class="chat-input-text">
+                <label class="field" style="margin-bottom:.35rem;">
+                  <span class="label-text">日文原文</span>
+                  <textarea id="msg-text-jp" placeholder="例：『今日も来てくれてありがとう〜！』"></textarea>
+                </label>
+                <label class="field" style="margin-bottom:0;">
+                  <span class="label-text">中文翻譯（可留白）</span>
+                  <textarea id="msg-text-zh" placeholder="例：『今天也來見我，真的謝謝你〜』"></textarea>
+                  <span class="field-hint">可以先只寫日文，之後慢慢補翻譯。Ctrl+Enter / ⌘+Enter 也可以快速加入訊息。</span>
+                </label>
+              </div>
+
+              <div class="chat-input-actions">
+                <button class="btn-secondary btn-small" id="clear-msg-btn">
+                  ♻ 清空本場對話
+                </button>
+                <button class="btn-primary btn-small" id="add-msg-btn">
+                  ➕ 加入訊息
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="note-area">
+            <label class="field">
+              <span class="label-text">備註／心情</span>
+              <textarea id="session-note" placeholder="今天的反應、自己說話順不順、下次想跟她說什麼…都可以寫在這裡。"></textarea>
+            </label>
+          </div>
+
+          <div style="margin-top:.4rem; display:flex; justify-content:flex-end; gap:.4rem; flex-wrap:wrap;">
+            <button class="btn-primary" id="save-session-btn">
+              💾 儲存這一場
+            </button>
+          </div>
+
+          <div class="small-text">
+            至少要填「日期」「成員名稱」，並加入一則對話訊息，才可以儲存。  
+            之後可以隨時再打開編輯、補充日文或翻譯。
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const RECORDS_KEY = "meetlog_chat_records_v1";
+      const SETTINGS_KEY = "meetlog_chat_settings_v1";
+
+      let records = [];
+      let settings = {
+        meName: "",
+        memberName: "",
+        meAvatar: "",
+        memberAvatar: ""
+      };
+
+      let editingId = null;
+      let currentMessages = [];
+
+      // ---- DOM ----
+      const meNameInput = document.getElementById("me-name");
+      const memberNameInput = document.getElementById("member-name");
+      const meAvatarFile = document.getElementById("me-avatar-file");
+      const memberAvatarFile = document.getElementById("member-avatar-file");
+      const meAvatarPreview = document.getElementById("me-avatar-preview");
+      const memberAvatarPreview = document.getElementById("member-avatar-preview");
+
+      const sessionListEl = document.getElementById("session-list");
+      const sessionCountEl = document.getElementById("session-count");
+
+      const sessionTitleLine = document.getElementById("session-title-line");
+      const sessionSubLine = document.getElementById("session-sub-line");
+
+      const sessionDate = document.getElementById("session-date");
+      const sessionMember = document.getElementById("session-member");
+      const sessionEvent = document.getElementById("session-event");
+      const sessionSlot = document.getElementById("session-slot");
+      const sessionTopic = document.getElementById("session-topic");
+      const sessionTags = document.getElementById("session-tags");
+      const sessionNote = document.getElementById("session-note");
+      const metaPreview = document.getElementById("meta-preview");
+
+      const chatWindow = document.getElementById("chat-window");
+      const msgRole = document.getElementById("msg-role");
+      const msgTextJp = document.getElementById("msg-text-jp");
+      const msgTextZh = document.getElementById("msg-text-zh");
+      const addMsgBtn = document.getElementById("add-msg-btn");
+      const clearMsgBtn = document.getElementById("clear-msg-btn");
+
+      const newSessionBtn = document.getElementById("new-session-btn");
+      const deleteSessionBtn = document.getElementById("delete-session-btn");
+      const saveSessionBtn = document.getElementById("save-session-btn");
+
+      // ---- Utils ----
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, function (s) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+          }[s];
+        });
+      }
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(SETTINGS_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object") {
+            settings = Object.assign(settings, parsed);
+          }
+        } catch (e) {
+          console.warn("設定讀取失敗", e);
+        }
+      }
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        } catch (e) {
+          console.warn("設定儲存失敗", e);
+        }
+      }
+
+      function loadRecords() {
+        try {
+          const raw = localStorage.getItem(RECORDS_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+          return [];
+        } catch (e) {
+          console.warn("紀錄讀取失敗", e);
+          return [];
+        }
+      }
+
+      function saveRecords() {
+        try {
+          localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+        } catch (e) {
+          alert("無法儲存紀錄（localStorage 可能已滿）");
+          console.error(e);
+        }
+      }
+
+      function formatDateForDisplay(dateStr) {
+        if (!dateStr) return "未填日期";
+        return dateStr;
+      }
+
+      // ---- Avatar / Name rendering ----
+      function updateAvatarPreviews() {
+        if (settings.meAvatar) {
+          meAvatarPreview.innerHTML = '<img src="' + settings.meAvatar + '" alt="me avatar" />';
+        } else {
+          meAvatarPreview.innerHTML = "<span>🙂</span>";
+        }
+
+        if (settings.memberAvatar) {
+          memberAvatarPreview.innerHTML = '<img src="' + settings.memberAvatar + '" alt="member avatar" />';
+        } else {
+          memberAvatarPreview.innerHTML = "<span>⭐</span>";
+        }
+
+        meNameInput.value = settings.meName || "";
+        memberNameInput.value = settings.memberName || "";
+      }
+
+      function handleAvatarFile(fileInput, key) {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          settings[key] = e.target.result || "";
+          saveSettings();
+          updateAvatarPreviews();
+          renderChat();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // ---- Sessions list ----
+      function renderSessionList() {
+        if (!records.length) {
+          sessionListEl.innerHTML =
+            '<div class="empty-hint">還沒有任何場次，右邊「新建場次」後儲存就會出現在這裡。</div>';
+          sessionCountEl.textContent = "0 場";
+          return;
+        }
+
+        const sorted = records.slice().sort((a, b) => {
+          const da = a.date ? new Date(a.date).getTime() : 0;
+          const db = b.date ? new Date(b.date).getTime() : 0;
+          if (da !== db) return db - da;
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        });
+
+        const html = sorted
+          .map(r => {
+            const activeClass = r.id === editingId ? " is-active" : "";
+            const dateText = formatDateForDisplay(r.date);
+            const memberText = r.member || "未填成員";
+            const eventText = r.eventName || "";
+            const topicText = r.topic || "";
+            const tags = (r.tags || "").split(/\s+/).filter(Boolean);
+
+            const secondLeft = eventText || topicText || "";
+            const secondRight = tags.length ? "#" + tags[0] : "";
+
+            return `
+              <button class="session-item${activeClass}" data-id="${r.id}">
+                <div class="session-mainline">
+                  <span>${escapeHtml(dateText)} ｜ ${escapeHtml(memberText)}</span>
+                  <span style="font-size:.75rem; color:#999;">${r.messages?.length || 0} 則</span>
+                </div>
+                <div class="session-secondline">
+                  <span>${escapeHtml(secondLeft)}</span>
+                  <span>${escapeHtml(secondRight)}</span>
+                </div>
+              </button>
+            `;
+          })
+          .join("");
+
+        sessionListEl.innerHTML = html;
+        sessionCountEl.textContent = records.length + " 場";
+      }
+
+      function findRecordById(id) {
+        return records.find(r => r.id === id) || null;
+      }
+
+      function setActiveSession(id) {
+        editingId = id;
+        const record = findRecordById(id);
+        if (!record) return;
+
+        sessionDate.value = record.date || "";
+        sessionMember.value = record.member || "";
+        sessionEvent.value = record.eventName || "";
+        sessionSlot.value = record.slot || "";
+        sessionTopic.value = record.topic || "";
+        sessionTags.value = record.tags || "";
+        sessionNote.value = record.note || "";
+
+        // 舊資料兼容：如果 messages 裡只有 text，就當作 jp
+        currentMessages = Array.isArray(record.messages)
+          ? record.messages.map(m => {
+              if (m.jp !== undefined || m.zh !== undefined) return m;
+              return {
+                id: m.id || ("m_" + (m.createdAt || Date.now())),
+                role: m.role || "member",
+                jp: m.text || "",
+                zh: "",
+                createdAt: m.createdAt || Date.now()
+              };
+            })
+          : [];
+
+        const dateText = formatDateForDisplay(record.date);
+        sessionTitleLine.textContent =
+          dateText + " ｜ " + (record.member || "未填成員");
+
+        let subParts = [];
+        if (record.eventName) subParts.push(record.eventName);
+        if (record.slot) subParts.push("場次：" + record.slot);
+        if (record.topic) subParts.push("話題：" + record.topic);
+        sessionSubLine.textContent = subParts.join(" ／ ") || "這一場的簡短內容還沒寫。";
+
+        deleteSessionBtn.disabled = false;
+
+        updateMetaPreview();
+        renderChat();
+        renderSessionList();
+      }
+
+      function resetSessionForm() {
+        editingId = null;
+        sessionDate.value = "";
+        sessionMember.value = "";
+        sessionEvent.value = "";
+        sessionSlot.value = "";
+        sessionTopic.value = "";
+        sessionTags.value = "";
+        sessionNote.value = "";
+        currentMessages = [];
+
+        sessionTitleLine.textContent = "尚未選擇場次";
+        sessionSubLine.textContent = "請先新建一場，或在左側點選既有紀錄。";
+        deleteSessionBtn.disabled = true;
+
+        updateMetaPreview();
+        renderChat();
+        renderSessionList();
+      }
+
+      // ---- Meta preview ----
+      function updateMetaPreview() {
+        const chips = [];
+        const dateStr = sessionDate.value.trim();
+        const slotStr = sessionSlot.value.trim();
+        const tagStr = sessionTags.value.trim();
+
+        if (dateStr) {
+          chips.push('<div class="meta-chip">📅 ' + escapeHtml(dateStr) + "</div>");
+        }
+        if (slotStr) {
+          chips.push('<div class="meta-chip">🕒 場次：' + escapeHtml(slotStr) + "</div>");
+        }
+
+        if (tagStr) {
+          const firstTag = tagStr.split(/\s+/).filter(Boolean)[0];
+          if (firstTag) {
+            chips.push('<div class="meta-chip">🏷 ' + escapeHtml(firstTag) + "</div>");
+          }
+        }
+
+        metaPreview.innerHTML = chips.join("");
+      }
+
+      // ---- Chat rendering ----
+      function getDisplayNameForRole(role) {
+        if (role === "me") {
+          return settings.meName || "我";
+        } else {
+          return settings.memberName || sessionMember.value.trim() || "成員";
+        }
+      }
+
+      function getAvatarForRole(role) {
+        if (role === "me") {
+          return settings.meAvatar || "";
+        } else {
+          return settings.memberAvatar || "";
+        }
+      }
+
+      function renderChat() {
+        if (!currentMessages.length) {
+          chatWindow.innerHTML =
+            '<div class="empty-hint">還沒有任何訊息。先輸入日文原文／中文翻譯，再按「加入訊息」。</div>';
+          return;
+        }
+
+        const html = currentMessages
+          .map(msg => {
+            const isMe = msg.role === "me";
+            const rowClass = isMe ? "msg-row msg-row--me" : "msg-row msg-row--member";
+            const name = escapeHtml(getDisplayNameForRole(msg.role));
+
+            // 兼容舊格式：沒有 jp/zh 時，使用 text 當 jp
+            const hasNew = (msg.jp !== undefined || msg.zh !== undefined);
+            const jpText = hasNew
+              ? (msg.jp || "")
+              : (msg.text || "");
+            const zhText = hasNew
+              ? (msg.zh || "")
+              : "";
+
+            if (!jpText && !zhText) return "";
+
+            const jpHtml = jpText
+              ? `<div class="msg-line-jp">${escapeHtml(jpText)}</div>`
+              : "";
+            const zhHtml = zhText
+              ? `<div class="msg-line-zh">${escapeHtml(zhText)}</div>`
+              : "";
+
+            const avatarSrc = getAvatarForRole(msg.role);
+            const avatarHtml = avatarSrc
+              ? `<div class="msg-avatar"><img src="${avatarSrc}" alt="avatar" /></div>`
+              : `<div class="msg-avatar">${isMe ? "🙂" : "⭐"}</div>`;
+
+            const bubbleClass = isMe
+              ? "msg-bubble msg-bubble--me"
+              : "msg-bubble msg-bubble--member";
+
+            const bubbleHtml = `
+              <div class="${bubbleClass}">
+                ${jpHtml}${zhHtml}
+              </div>
+            `;
+
+            if (isMe) {
+              return `
+                <div class="${rowClass}">
+                  <div class="msg-bubble-wrap" style="align-items:flex-end;">
+                    <div class="msg-name">${name}</div>
+                    ${bubbleHtml}
+                  </div>
+                  ${avatarHtml}
+                </div>
+              `;
+            } else {
+              return `
+                <div class="${rowClass}">
+                  ${avatarHtml}
+                  <div class="msg-bubble-wrap">
+                    <div class="msg-name">${name}</div>
+                    ${bubbleHtml}
+                  </div>
+                </div>
+              `;
+            }
+          })
+          .join("");
+
+        chatWindow.innerHTML = html;
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      // ---- Message actions ----
+      function addMessage() {
+        const role = msgRole.value === "me" ? "me" : "member";
+        const jp = msgTextJp.value.trim();
+        const zh = msgTextZh.value.trim();
+
+        if (!jp && !zh) return;
+
+        const now = Date.now();
+        currentMessages.push({
+          id: "m_" + now + "_" + Math.random().toString(16).slice(2),
+          role,
+          jp,
+          zh,
+          createdAt: now
+        });
+        msgTextJp.value = "";
+        msgTextZh.value = "";
+        renderChat();
+      }
+
+      function clearMessages() {
+        if (!currentMessages.length) return;
+        const ok = confirm("確定要清空這一場的所有對話嗎？");
+        if (!ok) return;
+        currentMessages = [];
+        renderChat();
+      }
+
+      // ---- Save/Delete session ----
+      function saveSession() {
+        const date = sessionDate.value.trim();
+        const member = sessionMember.value.trim();
+        const eventName = sessionEvent.value.trim();
+        const slot = sessionSlot.value.trim();
+        const topic = sessionTopic.value.trim();
+        const tags = sessionTags.value.trim();
+        const note = sessionNote.value.trim();
+
+        if (!date || !member) {
+          alert("請至少填寫「日期」和「成員名稱」。");
+          return;
+        }
+        if (!currentMessages.length) {
+          alert("請至少加入一則對話訊息，才能儲存這一場。");
+          return;
+        }
+
+        const now = Date.now();
+
+        if (editingId) {
+          const idx = records.findIndex(r => r.id === editingId);
+          if (idx !== -1) {
+            records[idx] = Object.assign({}, records[idx], {
+              date,
+              member,
+              eventName,
+              slot,
+              topic,
+              tags,
+              note,
+              messages: currentMessages.slice(),
+              updatedAt: now
+            });
+          }
+        } else {
+          const newId = "s_" + now + "_" + Math.random().toString(16).slice(2);
+          const record = {
+            id: newId,
+            date,
+            member,
+            eventName,
+            slot,
+            topic,
+            tags,
+            note,
+            messages: currentMessages.slice(),
+            createdAt: now,
+            updatedAt: now
+          };
+          records.push(record);
+          editingId = newId;
+        }
+
+        saveRecords();
+        renderSessionList();
+        setActiveSession(editingId);
+      }
+
+      function deleteSession() {
+        if (!editingId) return;
+        const ok = confirm("確定要刪除這一場嗎？刪除後無法復原。");
+        if (!ok) return;
+        records = records.filter(r => r.id !== editingId);
+        saveRecords();
+        resetSessionForm();
+      }
+
+      // ---- Event listeners ----
+      meNameInput.addEventListener("input", function () {
+        settings.meName = meNameInput.value.trim();
+        saveSettings();
+        renderChat();
+      });
+      memberNameInput.addEventListener("input", function () {
+        settings.memberName = memberNameInput.value.trim();
+        saveSettings();
+        renderChat();
+      });
+
+      meAvatarFile.addEventListener("change", function () {
+        handleAvatarFile(meAvatarFile, "meAvatar");
+      });
+      memberAvatarFile.addEventListener("change", function () {
+        handleAvatarFile(memberAvatarFile, "memberAvatar");
+      });
+
+      sessionListEl.addEventListener("click", function (e) {
+        const btn = e.target.closest(".session-item");
+        if (!btn) return;
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+        setActiveSession(id);
+      });
+
+      sessionDate.addEventListener("change", updateMetaPreview);
+      sessionSlot.addEventListener("input", updateMetaPreview);
+      sessionTags.addEventListener("input", updateMetaPreview);
+
+      addMsgBtn.addEventListener("click", function () {
+        addMessage();
+      });
+
+      function handleMsgKey(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          addMessage();
+        }
+      }
+
+      msgTextJp.addEventListener("keydown", handleMsgKey);
+      msgTextZh.addEventListener("keydown", handleMsgKey);
+
+      clearMsgBtn.addEventListener("click", clearMessages);
+      saveSessionBtn.addEventListener("click", saveSession);
+      deleteSessionBtn.addEventListener("click", deleteSession);
+      newSessionBtn.addEventListener("click", resetSessionForm);
+
+      // ---- Init ----
+      function init() {
+        loadSettings();
+        updateAvatarPreviews();
+
+        records = loadRecords();
+        renderSessionList();
+        resetSessionForm();
+
+        if (records.length) {
+          const firstId = records[0].id;
+          setActiveSession(firstId);
+        }
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
