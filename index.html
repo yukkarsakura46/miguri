@@ -370,7 +370,7 @@ if(type === 'other') {
     function takeShot() {
         closeAllDrawers();
         html2canvas(document.querySelector("#capture-area"), { scale: 4, useCORS: true, backgroundColor: "#ffffff" }).then(c => {
-            const a = document.createElement('a'); a.download = 'Meguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
+            const a = document.createElement('a'); a.download = 'Miguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
         });
     }
     document.addEventListener('DOMContentLoaded', renderRecordList);
