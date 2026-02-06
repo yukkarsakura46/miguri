@@ -191,54 +191,88 @@
     }
 
     function loadEditView(id) {
-        currentRecordId = id;
-        const db = getDB();
-        const r = db.find(item => item.id === id);
-        const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ""; };
-        setVal('input-single', r.single);
-        setVal('input-name', r.name);
-        setVal('input-nick', r.nick);
-        setVal('input-date', r.date);
-        setVal('input-part', r.part);
-        setVal('input-cards', r.cards);
-        setVal('input-seconds', r.seconds);
-        document.getElementById('chat-list').innerHTML = r.chats || "";
-        mAv = r.mAv || ""; fAv = r.fAv || "";
-        document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-        liveUpdate();
-        document.getElementById('main-dashboard').classList.remove('active');
-        document.getElementById('edit-view').classList.add('active');
-    }
+    currentRecordId = id;
+    const db = getDB();
+    const r = db.find(item => item.id === id);
+    
+    // 填充設定欄位
+    const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ""; };
+    setVal('input-single', r.single);
+    setVal('input-name', r.name);
+    setVal('input-nick', r.nick);
+    setVal('input-date', r.date);
+    setVal('input-part', r.part);
+    setVal('input-cards', r.cards);
+    setVal('input-seconds', r.seconds);
+
+    // 載入完整的對話清單
+    document.getElementById('chat-list').innerHTML = r.chats || "";
+    
+    // 讀取頭像數據
+    mAv = r.mAv || ""; 
+    fAv = r.fAv || "";
+    document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    
+    liveUpdate();
+    
+    // 切換視窗
+    document.getElementById('main-dashboard').classList.remove('active');
+    document.getElementById('edit-view').classList.add('active');
+}
 
     function backToDash() {
-        autoSave();
-        document.getElementById('edit-view').classList.remove('active');
-        document.getElementById('main-dashboard').classList.add('active');
+    // 1. 異步執行存檔，不阻塞畫面切換
+    setTimeout(() => {
+        try {
+            autoSave();
+        } catch(e) {
+            console.warn("自動存檔延遲或失敗", e);
+        }
+    }, 0);
+
+    // 2. 立即切換 UI
+    const editView = document.getElementById('edit-view');
+    const dashView = document.getElementById('main-dashboard');
+    
+    if (editView && dashView) {
+        editView.classList.remove('active');
+        dashView.classList.add('active');
+        // 重新渲染清單
         renderRecordList(); 
     }
+    
+    // 3. 關閉所有可能開啟的面板
+    closeAllDrawers();
+}
 
     function autoSave() {
-        if(!currentRecordId) return;
-        const db = getDB();
-        const idx = db.findIndex(r => r.id === currentRecordId);
-        if(idx === -1) return;
-        const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-        const nickValue = getVal('input-nick');
-        db[idx] = {
-            ...db[idx],
-            name: getVal('input-name'),
-            single: getVal('input-single'),
-            nick: nickValue,
-            date: getVal('input-date'),
-            part: getVal('input-part'),
-            cards: getVal('input-cards'),
-            seconds: getVal('input-seconds'),
-            chats: document.getElementById('chat-list').innerHTML,
-            mAv, fAv
-        };
-        saveDB(db);
-        if(nickValue) localStorage.setItem('default_nickname', nickValue);
-    }
+    if(!currentRecordId) return;
+    const db = getDB();
+    const idx = db.findIndex(r => r.id === currentRecordId);
+    if(idx === -1) return;
+    
+    const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+    const nickValue = getVal('input-nick');
+
+    // 關鍵：儲存當下 chat-list 的所有 HTML 內容，確保每一行都被存到
+    const chatContent = document.getElementById('chat-list').innerHTML;
+
+    db[idx] = {
+        ...db[idx],
+        name: getVal('input-name'),
+        single: getVal('input-single'),
+        nick: nickValue,
+        date: getVal('input-date'),
+        part: getVal('input-part'),
+        cards: getVal('input-cards'),
+        seconds: getVal('input-seconds'),
+        chats: chatContent, // 儲存完整對話
+        mAv: mAv,
+        fAv: fAv
+    };
+    saveDB(db);
+    if(nickValue) localStorage.setItem('default_nickname', nickValue);
+}
 
     function liveUpdate() {
         const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
@@ -265,16 +299,19 @@
         if(!msg) return;
         const list = document.getElementById('chat-list');
         const div = document.createElement('div');
-        if(type === 'other') {
-            div.className = 'chat-item item-other';
-            div.innerHTML = `<span style="position:absolute; right:10px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span><div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
-        } else {
-            const isC = (type === lastT);
-            div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
-            const avatar = type === 'member' ? mAv : fAv;
-            const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-            div.innerHTML = `<span style="position:absolute; top:0; ${type==='member'?'right': 'left'}:-25px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}<div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
-        }
+        // 修改後的 addChat 邏輯片段
+if(type === 'other') {
+    div.className = 'chat-item item-other';
+    // 加入 data-html2canvas-ignore 屬性，截圖時會自動隱藏
+    div.innerHTML = `<span data-html2canvas-ignore style="position:absolute; right:10px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span><div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
+} else {
+    const isC = (type === lastT);
+    div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
+    const avatar = type === 'member' ? mAv : fAv;
+    const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+    // 同樣在這裡加入 data-html2canvas-ignore
+    div.innerHTML = `<span data-html2canvas-ignore style="position:absolute; top:0; ${type==='member'?'right': 'left'}:-25px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}<div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
+}
         list.appendChild(div); lastT = type; document.getElementById('input-msg').value = '';
         autoSave();
     }
@@ -320,7 +357,7 @@
         const width = viewport.width * scaleX;
         const height = viewport.height * scaleY;
         ctx.drawImage(img, x, y, width, height, 0, 0, targetSize, targetSize);
-        const compressedData = canvas.toDataURL("image/jpeg", 0.7);
+        const compressedData = canvas.toDataURL("image/jpeg", 0.6);
         if (uploadTarget === 'member') { mAv = compressedData; document.getElementById('prev-img-member').src = mAv; } 
         else { fAv = compressedData; }
         closeCrop(); autoSave();
