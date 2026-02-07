@@ -6,6 +6,24 @@
     <title>Sakurazaka46 ミーグリ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+.date-input-wrap {
+  position: relative;
+}
+
+.date-input-wrap input[type="date"] {
+  position: relative;
+  background: transparent;
+}
+
+.date-placeholder {
+  position: absolute;
+  left: .6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: .85rem;
+  pointer-events: none;
+}
         :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; --bg-main: #f8f9fa; }
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background: #333; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
@@ -44,8 +62,45 @@
         .item-member .chat-avatar { margin-right: 12px; }
         .item-fan .chat-avatar { margin-left: 12px; }
         .bubble { padding: 11px 16px; font-size: 15px; border-radius: 18px; line-height: 1.4; border: 1px solid transparent; }
-        .item-member .bubble { background: #fff; border-color: #efeff4; border-top-left-radius: 4px; }
-        .item-fan .bubble { background: #f0f0f0; border-top-right-radius: 4px; }
+       :root {
+  --member-c1: #ffe9f3;
+  --member-c2: #ffffff;
+  --fan-c1: #e9f0ff;
+  --fan-c2: #f4f4f4;
+}
+
+.item-member .bubble {
+  padding: 11px 16px;
+  border-radius: 18px;
+  border-top-left-radius: 4px;
+
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(
+      135deg,
+      var(--member-c1, #ffe9f3),
+      var(--member-c2, #ffffff)
+    ) border-box;
+
+  border: 1px solid transparent;
+}
+
+.item-fan .bubble {
+  padding: 11px 16px;
+  border-radius: 18px;
+  border-top-right-radius: 4px;
+
+  background:
+    linear-gradient(#f7f7f7, #f7f7f7) padding-box,
+    linear-gradient(
+      135deg,
+      var(--fan-c1, #e9f0ff),
+      var(--fan-c2, #f4f4f4)
+    ) border-box;
+
+  border: 1px solid transparent;
+}
+
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
@@ -75,7 +130,7 @@
 <div id="main-dashboard" class="view-section active">
     <div class="dash-header">
         <h2 style="margin:0">ミーグリ</h2>
-        <button class="add-record-btn" onclick="createNewRecord()">＋ 新增紀錄</button>
+        <button class="add-record-btn" onclick="createNewRecord()">＋ 新增</button>
     </div>
     <div class="record-list" id="record-list"></div>
 </div>
@@ -126,7 +181,10 @@
     <input type="text" id="input-name" placeholder="成員姓名" oninput="liveUpdate()">
     <input type="text" id="input-nick" placeholder="你的暱稱" oninput="liveUpdate()">
     <input type="text" id="input-single" placeholder="單曲/專輯名稱" oninput="autoSave()">
-    <input type="date" id="input-date" oninput="liveUpdate()">
+    <div class="date-input-wrap">
+  <span class="date-placeholder" id="date-placeholder">選擇日期</span>
+  <input type="date" id="input-date" oninput="liveUpdate()">
+</div>
     <div class="config-grid">
         <select id="input-part" onchange="liveUpdate()">
             <option value="">部數</option>
@@ -136,6 +194,40 @@
         <input type="text" id="input-cards" placeholder="枚數" oninput="liveUpdate()">
         <input type="text" id="input-seconds" placeholder="秒數" oninput="liveUpdate()">
     </div>
+
+<!-- 🎨 對話框顏色設定 -->
+<div style="margin-top:12px;">
+  <div style="font-size:13px; margin-bottom:6px; color:#666;">對話框顏色（漸層）</div>
+
+  <!-- 成員 -->
+  <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+    <span style="font-size:12px; width:48px;">成員</span>
+    <input type="color" id="member-color-1" value="#ffe9f3" oninput="updateBubbleStyle()">
+    <input type="color" id="member-color-2" value="#ffffff" oninput="updateBubbleStyle()">
+  </div>
+
+  <!-- 自己 -->
+  <div style="display:flex; align-items:center; gap:6px;">
+    <span style="font-size:12px; width:48px;">自己</span>
+    <input type="color" id="fan-color-1" value="#e9f0ff" oninput="updateBubbleStyle()">
+    <input type="color" id="fan-color-2" value="#f4f4f4" oninput="updateBubbleStyle()">
+  </div>
+</div>
+
+    <!-- ✅ 新增：資料設定確認 / 取消 -->
+    <div style="display:flex; gap:8px; margin-top:8px;">
+        <button onclick="confirmConfig()"
+                style="flex:1; padding:10px; border-radius:8px; border:none;
+                       background:var(--sakura-pink); color:#fff; font-size:14px;">
+            確認
+        </button>
+        <button onclick="closeAllDrawers()"
+                style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;
+                       background:#fff; font-size:14px;">
+            取消
+        </button>
+    </div>
+
 </div>
 
 <div class="drawer" id="chatDrawer">
@@ -327,6 +419,14 @@ function syncChatAvatars() {
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
+// 還原漸層顏色
+document.getElementById('member-color-1').value = r.memberC1 || '#ffe9f3';
+document.getElementById('member-color-2').value = r.memberC2 || '#ffffff';
+document.getElementById('fan-color-1').value = r.fanC1 || '#e9f0ff';
+document.getElementById('fan-color-2').value = r.fanC2 || '#f4f4f4';
+
+updateBubbleStyle();
+
     document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
     syncChatAvatars();
     liveUpdate();
@@ -373,7 +473,7 @@ function syncChatAvatars() {
     // 直接抓取整個對話容器的 HTML，確保不限行數完整存檔
     const chatContent = document.getElementById('chat-list').innerHTML;
 
-    db[idx] = {
+        db[idx] = {
         ...db[idx],
         name: getVal('input-name'),
         single: getVal('input-single'),
@@ -384,12 +484,38 @@ function syncChatAvatars() {
         seconds: getVal('input-seconds'),
         chats: chatContent, // 存檔所有對話
         mAv: mAv,
-        fAv: fAv
+        fAv: fAv,
+
+        // 🌈 對話泡泡的漸層顏色（成員 / 自己）
+        memberC1: document.getElementById('member-color-1').value || '#ffe9f3',
+        memberC2: document.getElementById('member-color-2').value || '#ffffff',
+        fanC1:    document.getElementById('fan-color-1').value    || '#e9f0ff',
+        fanC2:    document.getElementById('fan-color-2').value    || '#f4f4f4'
     };
+
     saveDB(db);
     
     // 同時儲存預設暱稱
     if(nickValue) localStorage.setItem('default_nickname', nickValue);
+}
+
+function confirmConfig() {
+    // 再跑一次畫面更新，避免有沒觸發到 oninput 的欄位
+    try {
+        liveUpdate();
+    } catch(e) {
+        console.warn("liveUpdate 發生錯誤", e);
+    }
+
+    // 再存一遍，心理比較安心 XD
+    try {
+        autoSave();
+    } catch(e) {
+        console.warn("autoSave 發生錯誤", e);
+    }
+
+    // 關閉設定面板
+    closeAllDrawers();
 }
 
     function liveUpdate() {
@@ -411,6 +537,34 @@ function syncChatAvatars() {
         document.getElementById('prev-seconds').innerText = seconds ? `⏱️ ${seconds} 秒` : "";
         autoSave();
     }
+
+function updateBubbleStyle() {
+    const mc1 = document.getElementById('member-color-1').value;
+    const mc2 = document.getElementById('member-color-2').value;
+    const fc1 = document.getElementById('fan-color-1').value;
+    const fc2 = document.getElementById('fan-color-2').value;
+
+    document.documentElement.style.setProperty('--member-c1', mc1);
+    document.documentElement.style.setProperty('--member-c2', mc2);
+    document.documentElement.style.setProperty('--fan-c1', fc1);
+    document.documentElement.style.setProperty('--fan-c2', fc2);
+
+    // 存進目前紀錄（或全域設定）
+    try { autoSave(); } catch(e){}
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('input-date');
+  const datePlaceholder = document.getElementById('date-placeholder');
+
+  function updateDatePlaceholder() {
+    datePlaceholder.style.display = dateInput.value ? 'none' : 'block';
+  }
+
+  dateInput.addEventListener('change', updateDatePlaceholder);
+  updateDatePlaceholder();
+});
 
     function addChat(type) {
         const msg = document.getElementById('input-msg').value; 
