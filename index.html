@@ -117,7 +117,7 @@
 <div class="overlay" id="overlay" onclick="closeAllDrawers()"></div>
 
 <div class="drawer" id="configDrawer">
-    <h3>⚙️ 紀錄資料設定</h3>
+    <h3>⚙️ 資料設定</h3>
     <div class="drawer-btn-group">
         <button onclick="triggerFile('member')">成員相片</button>
         <button onclick="triggerFile('fan')">我的相片</button>
@@ -153,6 +153,26 @@
     let currentRecordId = null;
     let mAv = "", fAv = "", lastT = "";
     let uploadTarget = "";
+// 同步更新聊天區小頭像
+function syncChatAvatars() {
+    const chatList = document.getElementById('chat-list');
+    if (!chatList) return;
+
+    // 更新成員（左側）的頭像
+    if (mAv) {
+        chatList
+          .querySelectorAll('.item-member .chat-avatar')
+          .forEach(img => { img.src = mAv; });
+    }
+
+    // 更新自己（右側）的頭像
+    if (fAv) {
+        chatList
+          .querySelectorAll('.item-fan .chat-avatar')
+          .forEach(img => { img.src = fAv; });
+    }
+}
+
 
     let dbCache = [];             // 取代原本 localStorage 的快取
     let idb = null;               // IndexedDB 實際連線
@@ -308,7 +328,7 @@
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
     document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-    
+    syncChatAvatars();
     liveUpdate();
     
     // 切換視窗
@@ -545,11 +565,21 @@ ctx.drawImage(
             x, y, width, height,
             0, 0, targetSize, targetSize
         );
-        const compressedData = canvas.toDataURL("image/jpeg", 0.6);
-        if (uploadTarget === 'member') { mAv = compressedData; document.getElementById('prev-img-member').src = mAv; } 
-        else { fAv = compressedData; }
-        closeCrop(); autoSave();
+                const compressedData = canvas.toDataURL("image/jpeg", 0.6);
+        if (uploadTarget === 'member') {
+            mAv = compressedData;
+            document.getElementById('prev-img-member').src = mAv;
+        } else {
+            fAv = compressedData;
+        }
+
+        // ★ 裁完後，同步聊天室裡的小頭像
+        syncChatAvatars();
+
+        closeCrop();
+        autoSave();
     }
+
     function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
     function openDrawer(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).classList.add('active'); }
     function closeAllDrawers() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); }
