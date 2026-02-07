@@ -6,6 +6,24 @@
     <title>Sakurazaka46 ミーグリ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+/* 設定區：兩行兩格 */
+.config-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.config-grid-2 select,
+.config-grid-2 input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
 .date-input-wrap {
   position: relative;
 }
@@ -24,7 +42,16 @@
   font-size: .85rem;
   pointer-events: none;
 }
-        :root { --sakura-pink: #f4b4d0; --text-gray: #8e8e93; --nick-green: #2ecc71; --bg-main: #f8f9fa; }
+        :root { 
+        --sakura-pink: #f4b4d0; 
+        --text-gray: #8e8e93; 
+        --nick-green: #2ecc71; 
+        --bg-main: #f8f9fa; 
+        /* 對話框邊框漸層用的兩個顏色（預設：櫻粉 → 白） */
+        --bubble-c1: #ffb7c5;
+        --bubble-c2: #ffffff;
+      }
+
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; }
         body { background: #333; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
 
@@ -70,37 +97,26 @@
 }
 
 .item-member .bubble {
-  padding: 11px 16px;
-  border-radius: 18px;
-  border-top-left-radius: 4px;
-
-  background:
-    linear-gradient(#ffffff, #ffffff) padding-box,
-    linear-gradient(
-      135deg,
-      var(--member-c1, #ffe9f3),
-      var(--member-c2, #ffffff)
-    ) border-box;
-
-  border: 1px solid transparent;
+        padding: 11px 16px;
+        border-radius: 18px;
+        border-top-left-radius: 4px;
+        background:
+            /* 內部底色 */
+            linear-gradient(#ffffff, #ffffff) padding-box,
+            /* 外圈漸層邊框 */
+            linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
+        border: 1px solid transparent;
 }
 
 .item-fan .bubble {
-  padding: 11px 16px;
-  border-radius: 18px;
-  border-top-right-radius: 4px;
-
-  background:
-    linear-gradient(#f7f7f7, #f7f7f7) padding-box,
-    linear-gradient(
-      135deg,
-      var(--fan-c1, #e9f0ff),
-      var(--fan-c2, #f4f4f4)
-    ) border-box;
-
-  border: 1px solid transparent;
+        padding: 11px 16px;
+        border-radius: 18px;
+        border-top-right-radius: 4px;
+        background:
+            linear-gradient(#f7f7f7, #f7f7f7) padding-box,
+            linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
+        border: 1px solid transparent;
 }
-
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
@@ -128,11 +144,21 @@
 <body>
 
 <div id="main-dashboard" class="view-section active">
-    <div class="dash-header">
-        <h2 style="margin:0">ミーグリ</h2>
-        <button class="add-record-btn" onclick="createNewRecord()">＋ 新增</button>
+  <div class="dash-header">
+    <h2 style="margin:0">ミーグリ</h2>
+    <div>
+      <!-- 只負責匯出 CSV -->
+      <button class="add-record-btn" type="button" onclick="exportToNotionCSV()">
+        匯出 CSV
+      </button>
+      <!-- 只負責新增紀錄 -->
+      <button class="add-record-btn" type="button" onclick="createNewRecord()">
+        ＋ 新增
+      </button>
     </div>
-    <div class="record-list" id="record-list"></div>
+  </div>
+
+  <div class="record-list" id="record-list"></div>
 </div>
 
 <div id="edit-view" class="view-section">
@@ -173,48 +199,95 @@
 
 <div class="drawer" id="configDrawer">
     <h3>⚙️ 資料設定</h3>
+
     <div class="drawer-btn-group">
         <button onclick="triggerFile('member')">成員相片</button>
         <button onclick="triggerFile('fan')">我的相片</button>
     </div>
+
     <input type="file" id="real-file-input" style="display:none" onchange="handleFile(this)">
+
     <input type="text" id="input-name" placeholder="成員姓名" oninput="liveUpdate()">
     <input type="text" id="input-nick" placeholder="你的暱稱" oninput="liveUpdate()">
     <input type="text" id="input-single" placeholder="單曲/專輯名稱" oninput="autoSave()">
+
     <div class="date-input-wrap">
-  <span class="date-placeholder" id="date-placeholder">選擇日期</span>
-  <input type="date" id="input-date" oninput="liveUpdate()">
-</div>
-    <div class="config-grid">
+        <span class="date-placeholder" id="date-placeholder">選擇日期</span>
+        <input type="date" id="input-date" oninput="liveUpdate()">
+    </div>
+
+    <!-- 設定：兩行兩格 -->
+    <div class="config-grid-2">
+        <!-- 第 1 行：類型 + 部數 -->
+        <select id="input-type" onchange="liveUpdate()">
+            <option value="">類型</option>
+            <option value="線握">線握</option>
+            <option value="全握">全握</option>
+            <option value="實體">實體</option>
+        </select>
+
         <select id="input-part" onchange="liveUpdate()">
             <option value="">部數</option>
-            <option value="第1部">第1部</option><option value="第2部">第2部</option><option value="第3部">第3部</option>
-            <option value="第4部">第4部</option><option value="第5部">第5部</option><option value="第6部">第6部</option>
+            <option value="第1部">第1部</option>
+            <option value="第2部">第2部</option>
+            <option value="第3部">第3部</option>
+            <option value="第4部">第4部</option>
+            <option value="第5部">第5部</option>
+            <option value="第6部">第6部</option>
         </select>
+
+        <!-- 第 2 行：枚數 + 秒數 -->
         <input type="text" id="input-cards" placeholder="枚數" oninput="liveUpdate()">
         <input type="text" id="input-seconds" placeholder="秒數" oninput="liveUpdate()">
     </div>
 
-<!-- 🎨 對話框顏色設定 -->
-<div style="margin-top:12px;">
-  <div style="font-size:13px; margin-bottom:6px; color:#666;">對話框顏色（漸層）</div>
+    <!-- 對話框漸層顏色：從櫻坂46 應援色 15 色中選 2 個 -->
+    <div style="margin-top:12px;">
+        <div style="font-size:13px; margin-bottom:6px; color:#666;">對話框漸層顏色</div>
+        <div style="display:flex; gap:8px;">
+            <!-- 起點色 -->
+            <select id="bubble-color-1" onchange="updateBubbleColors()"
+                    style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                <option value="#ffffff">1 WHITE</option>
+                <option value="#ffb7c5" selected>2 SAKURA PINK</option>
+                <option value="#00dd33">3 GREEN</option>
+                <option value="#ffe600">4 YELLOW</option>
+                <option value="#ff3333">5 RED</option>
+                <option value="#66ccff">6 PASTEL BLUE</option>
+                <option value="#a020f0">7 PURPLE</option>
+                <option value="#ff66cc">8 PINK</option>
+                <option value="#00c78c">9 EMERALD GREEN</option>
+                <option value="#99ff66">10 LIGHT GREEN</option>
+                <option value="#8a2be2">11 VIOLET</option>
+                <option value="#ccffcc">12 PEARL GREEN</option>
+                <option value="#ff1493">13 PASSION PINK</option>
+                <option value="#ffa500">14 ORANGE</option>
+                <option value="#0066ff">15 BLUE</option>
+            </select>
 
-  <!-- 成員 -->
-  <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-    <span style="font-size:12px; width:48px;">成員</span>
-    <input type="color" id="member-color-1" value="#ffe9f3" oninput="updateBubbleStyle()">
-    <input type="color" id="member-color-2" value="#ffffff" oninput="updateBubbleStyle()">
-  </div>
+            <!-- 終點色 -->
+            <select id="bubble-color-2" onchange="updateBubbleColors()"
+                    style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                <option value="#ffffff" selected>1 WHITE</option>
+                <option value="#ffb7c5">2 SAKURA PINK</option>
+                <option value="#00dd33">3 GREEN</option>
+                <option value="#ffe600">4 YELLOW</option>
+                <option value="#ff3333">5 RED</option>
+                <option value="#66ccff">6 PASTEL BLUE</option>
+                <option value="#a020f0">7 PURPLE</option>
+                <option value="#ff66cc">8 PINK</option>
+                <option value="#00c78c">9 EMERALD GREEN</option>
+                <option value="#99ff66">10 LIGHT GREEN</option>
+                <option value="#8a2be2">11 VIOLET</option>
+                <option value="#ccffcc">12 PEARL GREEN</option>
+                <option value="#ff1493">13 PASSION PINK</option>
+                <option value="#ffa500">14 ORANGE</option>
+                <option value="#0066ff">15 BLUE</option>
+            </select>
+        </div>
+    </div>
 
-  <!-- 自己 -->
-  <div style="display:flex; align-items:center; gap:6px;">
-    <span style="font-size:12px; width:48px;">自己</span>
-    <input type="color" id="fan-color-1" value="#e9f0ff" oninput="updateBubbleStyle()">
-    <input type="color" id="fan-color-2" value="#f4f4f4" oninput="updateBubbleStyle()">
-  </div>
-</div>
-
-    <!-- ✅ 新增：資料設定確認 / 取消 -->
+    <!-- 資料設定確認 / 取消 -->
     <div style="display:flex; gap:8px; margin-top:8px;">
         <button onclick="confirmConfig()"
                 style="flex:1; padding:10px; border-radius:8px; border:none;
@@ -227,7 +300,6 @@
             取消
         </button>
     </div>
-
 </div>
 
 <div class="drawer" id="chatDrawer">
@@ -235,12 +307,25 @@
     <textarea id="input-msg" rows="3" placeholder="輸入對話內容..."></textarea>
     <div style="display:flex; gap:10px;">
         <button onclick="addChat('member')" style="flex:1; padding:12px; background:white; border:1px solid #ddd; border-radius:8px;">成員</button>
-        <button onclick="addChat('fan')" style="flex:1; padding:12px; background:#eee; border:none; border-radius:8px;">我</button>
+        <button onclick="addChat('fan')" style="flex:1; padding:12px; background:white; border:1px solid #ddd; border-radius:8px;">我</button>
         <button onclick="addChat('other')" style="flex:1; padding:12px; background:#dcdde1; border:none; border-radius:8px;">其他</button>
     </div>
 </div>
 
 <script>
+
+
+function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, function (m) {
+        return ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[m];
+    });
+}
 
     let currentRecordId = null;
     let mAv = "", fAv = "", lastT = "";
@@ -364,39 +449,137 @@ function syncChatAvatars() {
         };
     }
 
-    function renderRecordList() {
-        const db = getDB();
-        const container = document.getElementById('record-list');
-        container.innerHTML = db.length === 0 ? '<p style="text-align:center; color:#999; margin-top:20px;">目前沒有記錄。</p>' : '';
-        [...db].reverse().forEach(r => {
-            const card = document.createElement('div');
-            card.className = 'record-card';
-            card.onclick = () => loadEditView(r.id);
-            card.innerHTML = `
-                <div class="record-info">
-                    <div class="r-title">${r.name || '成員'} ${r.single ? `<span style="font-size:0.8rem; color:var(--sakura-pink);">[${r.single}]</span>` : ''}</div>
-                    <div class="r-meta">${r.date || '無日期'} | ${r.part || ''}</div>
-                </div>
-                <div class="card-actions"><button class="btn-del" onclick="event.stopPropagation(); deleteRecord(${r.id})">🗑️</button></div>
-            `;
-            container.appendChild(card);
-        });
+function renderRecordList() {
+    const db = getDB();
+    const container = document.getElementById('record-list');
+    container.innerHTML = '';
+
+    if (!db || db.length === 0) {
+        container.innerHTML =
+            '<p style="text-align:center; color:#999; margin-top:20px;">目前沒有記錄。</p>';
+        return;
     }
 
-    function createNewRecord() {
-        const id = Date.now();
-        const db = getDB();
-        const defaultNick = localStorage.getItem('default_nickname') || "";
-        db.push({ id, name: "", single: "", date: "", part: "", chats: "", mAv: "", fAv: "", nick: defaultNick, cards: "", seconds: "" });
-        saveDB(db);
-        loadEditView(id);
-    }
+    // 讓最新的一筆在最上面
+    [...db].reverse().forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'record-card';
+
+        // 點整張卡片 → 進入對話頁面
+        card.onclick = () => loadEditView(r.id);
+
+        // 左邊資訊區
+        const info = document.createElement('div');
+        info.className = 'record-info';
+
+        // 標題：成員名字 + （可選單曲）
+        const title = document.createElement('div');
+        title.className = 'r-title';
+        title.innerHTML =
+            (r.name || '成員') +
+            (r.single
+                ? ` <span style="font-size:0.8rem; color:var(--sakura-pink);">[${r.single}]</span>`
+                : '');
+
+        // 第二行：日期 | 類型 | 部數
+        const meta = document.createElement('div');
+        meta.className = 'r-meta';
+        const parts = [];
+        parts.push(r.date || '無日期');
+        if (r.type) parts.push(r.type);
+        if (r.part) parts.push(r.part);
+        meta.textContent = parts.join(' | ');
+
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        // 右邊操作區：★ 選取 + 🗑 刪除
+        const actions = document.createElement('div');
+        actions.className = 'card-actions';
+
+        // ★ 勾選要匯出的紀錄
+        const markBtn = document.createElement('button');
+        markBtn.type = 'button';
+        markBtn.className = 'btn-mark';
+        markBtn.textContent = r.selected ? '★' : '☆';
+        markBtn.title = '勾選要匯出的紀錄';
+        markBtn.onclick = (e) => {
+            e.stopPropagation();            // 不要同時觸發 card.onclick
+            r.selected = !r.selected;       // 切換選取狀態
+            saveDB(db);                     // 存回資料庫（你原本就有的函式）
+            renderRecordList();             // 重新渲染，星星立即更新
+        };
+
+        // 🗑 刪除
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-del';
+        delBtn.innerHTML = '🗑️';
+        delBtn.title = '刪除這筆紀錄';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();            // 一樣避免點到卡片
+            deleteRecord(r.id);             // 裡面已經有 confirm 就好
+        };
+
+        actions.appendChild(markBtn);
+        actions.appendChild(delBtn);
+
+        card.appendChild(info);
+        card.appendChild(actions);
+
+        container.appendChild(card);
+    });
+}
+
+function createNewRecord() {
+    const id = Date.now();
+    const db = getDB();
+    const defaultNick = localStorage.getItem('default_nickname') || "";
+
+    db.push({
+        id,
+        name: "",
+        single: "",
+        date: "",
+        part: "",
+        chats: "",
+        mAv: "",
+        fAv: "",
+        nick: defaultNick,
+        cards: "",
+        seconds: "",
+        selected: false    // 有做「勾選匯出」的話加這個，沒做也可以先不加
+    });
+
+    saveDB(db);
+    loadEditView(id);      // 立刻進入對話編輯畫面
+}
 
     function deleteRecord(id) {
         if(!confirm("確定要刪除這筆紀錄嗎？")) return;
-        saveDB(getDB().filter(r => r.id !== id));
-        renderRecordList();
+        let db = getDB();
+    db = db.filter(item => item.id !== id);
+    saveDB(db);
+    renderRecordList();
     }
+
+function normalizeDateForInput(val) {
+    if (!val) return "";
+
+    // 已經是 yyyy-MM-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+
+    // 中文日期：2025年12月22日
+    const m = val.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (m) {
+        const y = m[1];
+        const mo = String(m[2]).padStart(2, '0');
+        const d = String(m[3]).padStart(2, '0');
+        return `${y}-${mo}-${d}`;
+    }
+
+    return "";
+}
 
     function loadEditView(id) {
     currentRecordId = id;
@@ -404,11 +587,17 @@ function syncChatAvatars() {
     const r = db.find(item => item.id === id);
     
     // 填充設定欄位
-    const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ""; };
+const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = val || "";
+};
+
     setVal('input-single', r.single);
     setVal('input-name', r.name);
     setVal('input-nick', r.nick);
     setVal('input-date', r.date);
+    setVal('input-type', r.type);
     setVal('input-part', r.part);
     setVal('input-cards', r.cards);
     setVal('input-seconds', r.seconds);
@@ -419,11 +608,6 @@ function syncChatAvatars() {
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
-// 還原漸層顏色
-document.getElementById('member-color-1').value = r.memberC1 || '#ffe9f3';
-document.getElementById('member-color-2').value = r.memberC2 || '#ffffff';
-document.getElementById('fan-color-1').value = r.fanC1 || '#e9f0ff';
-document.getElementById('fan-color-2').value = r.fanC2 || '#f4f4f4';
 
 updateBubbleStyle();
 
@@ -434,6 +618,101 @@ updateBubbleStyle();
     // 切換視窗
     document.getElementById('main-dashboard').classList.remove('active');
     document.getElementById('edit-view').classList.add('active');
+}
+
+// 將聊天 HTML 轉成純文字（給 Notion 用）
+// 會輸出類似：
+// 成員：久しぶり
+// 我：お誕生日おめでとう
+// 中間描述：……
+function chatsHTMLToPlainText(html) {
+    if (!html) return "";
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    const items = container.querySelectorAll(".chat-item");
+    const lines = [];
+
+    items.forEach(item => {
+        const bubble = item.querySelector(".bubble");
+        if (!bubble) return;
+        const text = bubble.innerText.trim();
+        if (!text) return;
+
+        if (item.classList.contains("item-member")) {
+            lines.push("成員：" + text);
+        } else if (item.classList.contains("item-fan")) {
+            lines.push("我：" + text);
+        } else {
+            // 其他類型（描述情境等），直接塞文字
+            lines.push(text);
+        }
+    });
+
+    return lines.join("\n");
+}
+
+// CSV 欄位轉義（確保逗號、換行在 Notion 也能正確讀）
+function csvEscape(str) {
+    if (str === null || str === undefined) return '""';
+    const s = String(str).replace(/"/g, '""');
+    // 一律加雙引號，避免逗號 / 換行問題
+    return `"${s}"`;
+}
+
+// 匯出目前所有紀錄成 Notion 可匯入的 CSV
+function exportToNotionCSV() {
+    const all = getDB();
+    const db = all.filter(r => r.selected);
+
+   if (!db.length) {
+    alert("請先在列表用 ★ 勾選要匯出的紀錄");
+    return;
+    }
+
+    const header = [
+        "日期",
+        "單曲/專輯名稱",
+        "部數",
+        "枚數",
+        "秒數",
+        "類型",
+        "對話"
+    ];
+
+    const rows = [];
+    rows.push(header.map(csvEscape).join(","));
+
+    db.forEach(r => {
+        const dialog = chatsHTMLToPlainText(r.chats || "");
+
+        const cols = [
+            r.date || "",
+            r.single || "",
+            r.part || "",
+            r.cards || "",
+            r.seconds || "",
+            r.type || "",
+            dialog
+        ].map(csvEscape);
+
+        rows.push(cols.join(","));
+    });
+
+    const csvContent = rows.join("\r\n");
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvContent], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const today = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `miguri_${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
     function backToDash() {
@@ -479,6 +758,7 @@ updateBubbleStyle();
         single: getVal('input-single'),
         nick: nickValue,
         date: getVal('input-date'),
+        type: getVal('input-type'),
         part: getVal('input-part'),
         cards: getVal('input-cards'),
         seconds: getVal('input-seconds'),
@@ -487,10 +767,6 @@ updateBubbleStyle();
         fAv: fAv,
 
         // 🌈 對話泡泡的漸層顏色（成員 / 自己）
-        memberC1: document.getElementById('member-color-1').value || '#ffe9f3',
-        memberC2: document.getElementById('member-color-2').value || '#ffffff',
-        fanC1:    document.getElementById('fan-color-1').value    || '#e9f0ff',
-        fanC2:    document.getElementById('fan-color-2').value    || '#f4f4f4'
     };
 
     saveDB(db);
@@ -539,15 +815,6 @@ function confirmConfig() {
     }
 
 function updateBubbleStyle() {
-    const mc1 = document.getElementById('member-color-1').value;
-    const mc2 = document.getElementById('member-color-2').value;
-    const fc1 = document.getElementById('fan-color-1').value;
-    const fc2 = document.getElementById('fan-color-2').value;
-
-    document.documentElement.style.setProperty('--member-c1', mc1);
-    document.documentElement.style.setProperty('--member-c2', mc2);
-    document.documentElement.style.setProperty('--fan-c1', fc1);
-    document.documentElement.style.setProperty('--fan-c2', fc2);
 
     // 存進目前紀錄（或全域設定）
     try { autoSave(); } catch(e){}
@@ -737,13 +1004,54 @@ ctx.drawImage(
     function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
     function openDrawer(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).classList.add('active'); }
     function closeAllDrawers() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); }
-    function takeShot() {
+        function updateBubbleColors(fromLoad) {
+        var sel1 = document.getElementById('bubble-color-1');
+        var sel2 = document.getElementById('bubble-color-2');
+        if (!sel1 || !sel2) return;
+
+        var c1 = sel1.value || '#ffb7c5';
+        var c2 = sel2.value || '#ffffff';
+
+        // 套到 CSS 變數，對話框邊框會立刻更新
+        document.documentElement.style.setProperty('--bubble-c1', c1);
+        document.documentElement.style.setProperty('--bubble-c2', c2);
+
+        // 非載入時才寫入 localStorage
+        if (!fromLoad) {
+            try {
+                localStorage.setItem('bubbleColors', JSON.stringify({ c1: c1, c2: c2 }));
+            } catch (e) {}
+        }
+    }
+
+    function initBubbleColors() {
+        var saved = null;
+        try {
+            saved = JSON.parse(localStorage.getItem('bubbleColors') || '{}');
+        } catch (e) { saved = null; }
+
+        var sel1 = document.getElementById('bubble-color-1');
+        var sel2 = document.getElementById('bubble-color-2');
+
+        if (saved && saved.c1 && sel1) sel1.value = saved.c1;
+        if (saved && saved.c2 && sel2) sel2.value = saved.c2;
+
+        // 一開始也套一次（fromLoad = true -> 不寫入 localStorage）
+        updateBubbleColors(true);
+    }
+
+        function takeShot() {
         closeAllDrawers();
         html2canvas(document.querySelector("#capture-area"), { scale: 4, useCORS: true, backgroundColor: "#ffffff" }).then(c => {
             const a = document.createElement('a'); a.download = 'Miguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
         });
     }
-    document.addEventListener('DOMContentLoaded', initIndexedDB);
+    document.addEventListener('DOMContentLoaded', function () {
+    initIndexedDB();     // 原本就有的
+    renderRecordList();  // 如果你本來有用到
+    initBubbleColors();  // 新加的：漸層顏色初始化
+});
+
 </script>
 </body>
 </html>
