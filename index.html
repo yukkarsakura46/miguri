@@ -139,24 +139,129 @@
         .nav-btn { background: none; border: none; font-size: 11px; cursor: pointer; color: #666; }
         .back-nav { background: #eee; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 400; }
-    </style>
+    .fab-add {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sakura-pink);
+  color: #fff;
+  font-size: 32px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.fab-add:active {
+  transform: scale(0.96);
+}
+
+/* 桌機稍微往上 / 往裡縮一點 */
+@media (min-width: 768px) {
+  .fab-add {
+    right: 32px;
+    bottom: 32px;
+  }
+}
+/* 標題 + 上方工具列 */
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-title {
+  margin: 0;
+}
+
+/* 上方按鈕列 */
+.dash-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 小顆的 chip 樣式，不要像大圓按鈕那麼厚重 */
+.top-btn {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #f9c3de;
+  background: #fff;
+  color: #ff7fb2;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+/* 主要按鈕（CSV）稍微填色，當主角 */
+.top-btn-primary {
+  background: var(--sakura-pink);
+  color: #fff;
+  border-color: var(--sakura-pink);
+}
+
+/* 點下去有一點縮放回饋 */
+.top-btn:active {
+  transform: scale(0.96);
+}
+
+/* 小螢幕讓按鈕靠右，必要時可以自動換行 */
+@media (max-width: 480px) {
+  .dash-actions {
+    flex: 1;
+    justify-content: flex-end;
+  }
+}
+
+</style>
 </head>
 <body>
 
 <div id="main-dashboard" class="view-section active">
-  <div class="dash-header">
-    <h2 style="margin:0">ミーグリ</h2>
-    <div>
-      <!-- 只負責匯出 CSV -->
-      <button class="add-record-btn" type="button" onclick="exportToNotionCSV()">
-        匯出 CSV
-      </button>
-      <!-- 只負責新增紀錄 -->
-      <button class="add-record-btn" type="button" onclick="createNewRecord()">
-        ＋ 新增
-      </button>
-    </div>
+<div class="dash-header">
+  <h2 class="app-title">🌸ミーグリ</h2>
+
+  <div class="dash-actions">
+    <!-- 匯出到 Notion 的 CSV（主按鈕） -->
+    <button class="top-btn top-btn-primary"
+            type="button"
+            onclick="exportToNotionCSV()">
+      CSV
+    </button>
+
+    <!-- 匯出備份 JSON -->
+    <button class="top-btn"
+            type="button"
+            onclick="exportBackup()">
+      備份↓
+    </button>
+
+    <!-- 匯入備份 JSON -->
+    <button class="top-btn"
+            type="button"
+            onclick="triggerBackupImport()">
+      備份↑
+    </button>
+
+    <!-- 匯入備份用的隱藏 input -->
+    <input type="file"
+           id="backup-input"
+           accept="application/json"
+           style="display:none"
+           onchange="importBackup(this.files)">
   </div>
+</div>
 
   <div class="record-list" id="record-list"></div>
 </div>
@@ -715,6 +820,83 @@ function exportToNotionCSV() {
     URL.revokeObjectURL(url);
 }
 
+// 🔹 匯出備份：把目前所有紀錄存成 JSON 下載
+function exportBackup() {
+    const db = getDB() || [];
+
+    if (!db.length) {
+        if (!confirm("目前沒有紀錄，要匯出一個空的備份檔嗎？")) return;
+    }
+
+    // 可以留個版本欄位，未來想改格式比較好處理
+    const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        records: db
+    };
+
+    const json = JSON.stringify(payload);
+    const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+    a.href = url;
+    a.download = `miguri_${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// 🔹 觸發隱藏的 <input type="file">，讓使用者選備份檔
+function triggerBackupImport() {
+    const input = document.getElementById("backup-input");
+    if (input) {
+        input.value = "";           // 清掉上一次選擇
+        input.click();
+    }
+}
+
+// 🔹 匯入備份：讀 JSON，覆蓋目前資料
+function importBackup(files) {
+    const file = files && files[0];
+    if (!file) return;
+
+    if (!confirm("匯入備份會覆蓋目前裝置上的所有紀錄，確定要繼續嗎？")) {
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const text = e.target.result;
+            const data = JSON.parse(text);
+
+            // 同時支援兩種格式：
+            // 1) { version, records: [...] }
+            // 2) 直接就是 Array
+            const records = Array.isArray(data) ? data : data.records;
+
+            if (!Array.isArray(records)) {
+                alert("備份檔格式不正確，無法匯入。");
+                return;
+            }
+
+            // 覆蓋目前 DB
+            saveDB(records);
+            renderRecordList();
+
+            alert("匯入完成！已載入 " + records.length + " 筆紀錄。");
+        } catch (err) {
+            console.error(err);
+            alert("匯入失敗，檔案內容可能已損壞或不是備份檔。");
+        }
+    };
+
+    reader.readAsText(file, "utf-8");
+}
+
     function backToDash() {
     // 1. 異步執行存檔，不阻塞畫面切換
     setTimeout(() => {
@@ -1053,5 +1235,8 @@ ctx.drawImage(
 });
 
 </script>
+<button class="fab-add" type="button" onclick="createNewRecord()">
+  ＋
+</button>
 </body>
 </html>
