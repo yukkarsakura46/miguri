@@ -153,8 +153,86 @@
     let mAv = "", fAv = "", lastT = "";
     let uploadTarget = "";
 
-    const getDB = () => JSON.parse(localStorage.getItem('sakura_v10_db') || "[]");
-    const saveDB = (db) => localStorage.setItem('sakura_v10_db', JSON.stringify(db));
+    let dbCache = [];             // 取代原本 localStorage 的快取
+    let idb = null;               // IndexedDB 實際連線
+
+    function getDB() {
+        // 之後所有程式都從這裡拿資料
+        return dbCache;
+    }
+
+    function setDBCache(db) {
+        dbCache = Array.isArray(db) ? db : [];
+    }
+
+    function saveDB(db) {
+        // 更新記憶體快取
+        setDBCache(db);
+
+        // 儲存到 IndexedDB
+        if (idb) {
+            try {
+                const tx = idb.transaction('records', 'readwrite');
+                const store = tx.objectStore('records');
+                store.put({ id: 'dbArray', value: dbCache });
+            } catch (e) {
+                console.warn('寫入 IndexedDB 失敗：', e);
+            }
+        } else {
+            // 防呆備用：萬一 IndexedDB 開不起來，再退回 localStorage（容量還是有可能不夠）
+            try {
+                localStorage.setItem('sakura_v10_db', JSON.stringify(dbCache));
+            } catch (e) {
+                console.warn('寫入 localStorage 失敗：', e);
+            }
+        }
+    }
+
+    function initIndexedDB() {
+        if (!('indexedDB' in window)) {
+            console.warn('瀏覽器不支援 IndexedDB，改用 localStorage。');
+            setDBCache(JSON.parse(localStorage.getItem('sakura_v10_db') || "[]"));
+            renderRecordList();
+            return;
+        }
+
+        const request = indexedDB.open('sakura_meetlog_db_v1', 1);
+
+        request.onupgradeneeded = function () {
+            const db = request.result;
+            if (!db.objectStoreNames.contains('records')) {
+                db.createObjectStore('records', { keyPath: 'id' });
+            }
+        };
+
+        request.onsuccess = function () {
+            idb = request.result;
+            const tx = idb.transaction('records', 'readonly');
+            const store = tx.objectStore('records');
+            const getReq = store.get('dbArray');
+
+            getReq.onsuccess = function () {
+                const data = getReq.result && Array.isArray(getReq.result.value)
+                    ? getReq.result.value
+                    : [];
+                setDBCache(data);
+                renderRecordList();     // 載入完成後再畫列表
+            };
+
+            getReq.onerror = function () {
+                console.warn('讀取 IndexedDB 失敗：', getReq.error);
+                setDBCache([]);
+                renderRecordList();
+            };
+        };
+
+        request.onerror = function () {
+            console.warn('開啟 IndexedDB 失敗：', request.error);
+            // 退回 localStorage（如果之前有存）
+            setDBCache(JSON.parse(localStorage.getItem('sakura_v10_db') || "[]"));
+            renderRecordList();
+        };
+    }
 
     function renderRecordList() {
         const db = getDB();
@@ -373,7 +451,7 @@ if(type === 'other') {
             const a = document.createElement('a'); a.download = 'Miguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
         });
     }
-    document.addEventListener('DOMContentLoaded', renderRecordList);
+    document.addEventListener('DOMContentLoaded', initIndexedDB);
 </script>
 </body>
 </html>
