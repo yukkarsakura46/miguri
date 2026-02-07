@@ -161,7 +161,9 @@
 #edit-view .fab-add {
   display: none;
 }
-
+body.in-edit .fab-add {
+  display: none;
+}
 .fab-add:active {
   transform: scale(0.96);
 }
@@ -226,6 +228,28 @@
     flex: 1;
     justify-content: flex-end;
   }
+}
+/* ===== 截圖模式：讓對話框更清楚 ===== */
+body.screenshot-mode .bubble {
+  /* 顏色加深一點（仍然保留漸層） */
+  filter: saturate(1.2) contrast(1.15);
+
+  /* 加一點邊框，避免太淡 */
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  /* 陰影加重，讓氣泡浮出來 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* 字體微微加粗，手機截圖更清楚 */
+body.screenshot-mode .bubble {
+  font-weight: 500;
+}
+
+/* 如果你有「我的 / 成員」不同氣泡，也一樣吃得到 */
+body.screenshot-mode .bubble.me,
+body.screenshot-mode .bubble.member {
+  filter: saturate(1.25) contrast(1.2);
 }
 
 </style>
@@ -559,6 +583,7 @@ function syncChatAvatars() {
     }
 
 function renderRecordList() {
+    document.body.classList.remove('in-edit');
     const db = getDB();
     const container = document.getElementById('record-list');
     container.innerHTML = '';
@@ -695,6 +720,7 @@ function normalizeDateForInput(val) {
 }
 
     function loadEditView(id) {
+    document.body.classList.add('in-edit');
     currentRecordId = id;
     const db = getDB();
     const r = db.find(item => item.id === id);
@@ -1244,12 +1270,22 @@ function updateBubbleColors(fromLoad) {
         updateBubbleColors(true);
     }
 
-        function takeShot() {
-        closeAllDrawers();
-        html2canvas(document.querySelector("#capture-area"), { scale: 4, useCORS: true, backgroundColor: "#ffffff" }).then(c => {
-            const a = document.createElement('a'); a.download = 'Miguri_' + Date.now() + '.png'; a.href = c.toDataURL(); a.click();
-        });
-    }
+ function takeShot() {
+  const target = document.getElementById('capture-area');
+
+  document.body.classList.add('screenshot-mode');
+
+  setTimeout(() => {
+    html2canvas(target).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'meeguri.png';
+      link.href = canvas.toDataURL();
+      link.click();
+
+      document.body.classList.remove('screenshot-mode');
+    });
+  }, 50);
+}
     document.addEventListener('DOMContentLoaded', function () {
     initIndexedDB();     // 原本就有的
     renderRecordList();  // 如果你本來有用到
