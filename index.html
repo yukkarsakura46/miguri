@@ -149,12 +149,30 @@
 </div>
 
 <script>
+
     let currentRecordId = null;
     let mAv = "", fAv = "", lastT = "";
     let uploadTarget = "";
 
     let dbCache = [];             // 取代原本 localStorage 的快取
     let idb = null;               // IndexedDB 實際連線
+    // ===== 裁切預覽：拖曳 + 雙指縮放 =====
+    const rawI = document.getElementById('preview-img-raw');
+    let cropImgLoaded = false;
+    let imgPosX = 0;
+    let imgPosY = 0;
+    let imgScale = 1;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let imgStartX = 0;
+    let imgStartY = 0;
+    let lastPinchDist = 0;
+
+    function updateCropTransform() {
+        // 以 transform 處理位移 + 縮放
+        rawI.style.transform = `translate(${imgPosX}px, ${imgPosY}px) scale(${imgScale})`;
+    }
 
     function getDB() {
         // 之後所有程式都從這裡拿資料
@@ -405,22 +423,108 @@ if(type === 'other') {
                 const img = document.getElementById('preview-img-raw');
                 img.src = e.target.result; 
                 document.getElementById('crop-modal').style.display = 'flex'; 
-                img.onload = function() {
+                  img.onload = function() {
                     const scale = 300 / Math.min(img.naturalWidth, img.naturalHeight);
-                    img.style.width = (img.naturalWidth * scale) + "px";
+                    img.style.width  = (img.naturalWidth  * scale) + "px";
                     img.style.height = (img.naturalHeight * scale) + "px";
-                    img.style.top = '0px'; img.style.left = '0px';
+
+                    // 初始化縮放狀態（置中 + 縮放 1）
+                    imgScale = 1;
+                    imgPosX = 0;
+                    imgPosY = 0;
+                    cropImgLoaded = true;
+                    updateCropTransform();
                 };
+
             };
             reader.readAsDataURL(file);
         }
     }
 
-    let isD = false; const rawI = document.getElementById('preview-img-raw');
-    rawI.onmousedown = () => isD = true; window.onmouseup = () => isD = false;
-    window.onmousemove = e => { if(isD) { rawI.style.left = (rawI.offsetLeft + e.movementX) + 'px'; rawI.style.top = (rawI.offsetTop + e.movementY) + 'px'; } };
-    rawI.ontouchstart = () => isD = true; rawI.ontouchend = () => isD = false;
-    rawI.ontouchmove = e => { if(isD) { const touch = e.touches[0]; rawI.style.left = (rawI.offsetLeft + (touch.clientX - (rawI.lastX || touch.clientX))) + 'px'; rawI.style.top = (rawI.offsetTop + (touch.clientY - (rawI.lastY || touch.clientY))) + 'px'; rawI.lastX = touch.clientX; rawI.lastY = touch.clientY; } };
+        // 滑鼠拖曳
+    rawI.addEventListener('mousedown', function (e) {
+        if (!cropImgLoaded) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        imgStartX = imgPosX;
+        imgStartY = imgPosY;
+    });
+
+    window.addEventListener('mouseup', function () {
+        isDragging = false;
+    });
+
+    window.addEventListener('mousemove', function (e) {
+        if (!isDragging || !cropImgLoaded) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        imgPosX = imgStartX + dx;
+        imgPosY = imgStartY + dy;
+        updateCropTransform();
+    });
+
+    // 手指：單指拖曳 + 雙指縮放
+    rawI.addEventListener('touchstart', function (e) {
+        if (!cropImgLoaded) return;
+        if (e.touches.length === 1) {
+            // 單指拖曳
+            const t = e.touches[0];
+            isDragging = true;
+            dragStartX = t.clientX;
+            dragStartY = t.clientY;
+            imgStartX = imgPosX;
+            imgStartY = imgPosY;
+            lastPinchDist = 0;
+        } else if (e.touches.length === 2) {
+            // 雙指縮放
+            const [t1, t2] = e.touches;
+            lastPinchDist = Math.hypot(
+                t2.clientX - t1.clientX,
+                t2.clientY - t1.clientY
+            );
+            isDragging = false;
+        }
+    }, { passive: false });
+
+    rawI.addEventListener('touchmove', function (e) {
+        if (!cropImgLoaded) return;
+        if (e.touches.length === 1 && isDragging) {
+            // 單指拖曳
+            const t = e.touches[0];
+            const dx = t.clientX - dragStartX;
+            const dy = t.clientY - dragStartY;
+            imgPosX = imgStartX + dx;
+            imgPosY = imgStartY + dy;
+            updateCropTransform();
+        } else if (e.touches.length === 2) {
+            // 雙指縮放
+            const [t1, t2] = e.touches;
+            const dist = Math.hypot(
+                t2.clientX - t1.clientX,
+                t2.clientY - t1.clientY
+            );
+            if (lastPinchDist) {
+                let factor = dist / lastPinchDist;
+                let newScale = imgScale * factor;
+                // 限制縮放範圍（可依喜好調整）
+                if (newScale < 1) newScale = 1;
+                if (newScale > 3) newScale = 3;
+                imgScale = newScale;
+                updateCropTransform();
+            }
+            lastPinchDist = dist;
+        }
+        e.preventDefault();
+    }, { passive: false });
+
+    rawI.addEventListener('touchend', function () {
+        if (!event.touches || event.touches.length === 0) {
+            isDragging = false;
+            lastPinchDist = 0;
+        }
+    });
+
 
     function confirmCrop() {
         const canvas = document.createElement('canvas');
@@ -436,7 +540,11 @@ if(type === 'other') {
         const y = (viewport.top - rect.top) * scaleY;
         const width = viewport.width * scaleX;
         const height = viewport.height * scaleY;
-        ctx.drawImage(img, x, y, width, height, 0, 0, targetSize, targetSize);
+ctx.drawImage(
+            img,
+            x, y, width, height,
+            0, 0, targetSize, targetSize
+        );
         const compressedData = canvas.toDataURL("image/jpeg", 0.6);
         if (uploadTarget === 'member') { mAv = compressedData; document.getElementById('prev-img-member').src = mAv; } 
         else { fAv = compressedData; }
