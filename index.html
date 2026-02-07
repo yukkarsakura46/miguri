@@ -245,7 +245,12 @@ body.screenshot-mode .bubble {
 body.screenshot-mode .bubble {
   font-weight: 500;
 }
-
+body.screenshot-mode .bubble {
+  background-blend-mode: multiply;
+}
+body.screenshot-mode .bubble {
+  filter: saturate(1.3) contrast(1.3);
+}
 /* 如果你有「我的 / 成員」不同氣泡，也一樣吃得到 */
 body.screenshot-mode .bubble.me,
 body.screenshot-mode .bubble.member {
@@ -1278,7 +1283,7 @@ function updateBubbleColors(fromLoad) {
   setTimeout(() => {
     html2canvas(target).then(canvas => {
       const link = document.createElement('a');
-      link.download = 'meeguri.png';
+      link.download = 'miguri.png';
       link.href = canvas.toDataURL();
       link.click();
 
