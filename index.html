@@ -182,6 +182,10 @@
   margin: 0;
 }
 
+#edit-view .fab-add {
+  display: none;
+}
+
 /* 上方按鈕列 */
 .dash-actions {
   display: flex;
@@ -641,11 +645,12 @@ function createNewRecord() {
     const db = getDB();
     const defaultNick = localStorage.getItem('default_nickname') || "";
 
-    db.push({
+        db.push({
         id,
         name: "",
         single: "",
         date: "",
+        type: "",
         part: "",
         chats: "",
         mAv: "",
@@ -653,8 +658,11 @@ function createNewRecord() {
         nick: defaultNick,
         cards: "",
         seconds: "",
-        selected: false    // 有做「勾選匯出」的話加這個，沒做也可以先不加
+        selected: false,
+        bubbleC1: "#ffe9f3",   // 這一場的顏色起點
+        bubbleC2: "#ffffff"    // 這一場的顏色終點
     });
+
 
     saveDB(db);
     loadEditView(id);      // 立刻進入對話編輯畫面
@@ -713,6 +721,21 @@ const setVal = (id, val) => {
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
+    // 顏色：如果舊資料沒有，就用預設值
+    const sel1 = document.getElementById('bubble-color-1');
+    const sel2 = document.getElementById('bubble-color-2');
+    if (sel1 && sel2) 
+    // 如果這筆有自己的顏色就用它，沒有就維持目前選單的值
+    if (r.bubbleC1) sel1.value = r.bubbleC1;
+    if (r.bubbleC2) sel2.value = r.bubbleC2;
+    updateBubbleColors(true);
+    // 套到畫面上的聊天區
+    const chatArea = document.getElementById('chat-area'); // 同上，換成你真正的 id
+    if (chatArea) {
+        chatArea.style.setProperty('--bubble-c1', c1);
+        chatArea.style.setProperty('--bubble-c2', c2);
+
+    }
 
 updateBubbleStyle();
 
@@ -1186,25 +1209,24 @@ ctx.drawImage(
     function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
     function openDrawer(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).classList.add('active'); }
     function closeAllDrawers() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); }
-        function updateBubbleColors(fromLoad) {
-        var sel1 = document.getElementById('bubble-color-1');
-        var sel2 = document.getElementById('bubble-color-2');
-        if (!sel1 || !sel2) return;
+function updateBubbleColors(fromLoad) {
+    var sel1 = document.getElementById('bubble-color-1');
+    var sel2 = document.getElementById('bubble-color-2');
+    if (!sel1 || !sel2) return;
 
-        var c1 = sel1.value || '#ffb7c5';
-        var c2 = sel2.value || '#ffffff';
+    var c1 = sel1.value || '#ffb7c5';
+    var c2 = sel2.value || '#ffffff';
 
-        // 套到 CSS 變數，對話框邊框會立刻更新
-        document.documentElement.style.setProperty('--bubble-c1', c1);
-        document.documentElement.style.setProperty('--bubble-c2', c2);
+    // 套到 CSS 變數，讓 .bubble 用 var(--bubble-c1/2)
+    document.documentElement.style.setProperty('--bubble-c1', c1);
+    document.documentElement.style.setProperty('--bubble-c2', c2);
 
-        // 非載入時才寫入 localStorage
-        if (!fromLoad) {
-            try {
-                localStorage.setItem('bubbleColors', JSON.stringify({ c1: c1, c2: c2 }));
-            } catch (e) {}
-        }
+    if (!fromLoad) {
+        try {
+            localStorage.setItem('bubbleColors', JSON.stringify({ c1, c2 }));
+        } catch (e) {}
     }
+}
 
     function initBubbleColors() {
         var saved = null;
@@ -1235,8 +1257,10 @@ ctx.drawImage(
 });
 
 </script>
-<button class="fab-add" type="button" onclick="createNewRecord()">
+<button class="fab-add"
+        type="button"
+        onclick="createNewRecord()"
+        data-html2canvas-ignore>
   ＋
-</button>
-</body>
+</button></body>
 </html>
