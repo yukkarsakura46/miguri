@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sakurazaka46 ミーグリ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@2.9.5/dist/dom-to-image-more.min.js"></script>
+
     <style>
 /* 設定區：兩行兩格 */
 .config-grid-2 {
@@ -71,18 +73,63 @@
 
         /* 編輯預覽區 */
         #capture-area { padding: 20px 20px 100px; flex-grow: 1; background: white; }
-        .header-center { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #f2f2f7; padding-bottom: 15px; position: relative; }
+.header-center {
+  position: relative;
+  text-align: center;
+
+  padding-bottom: 14px;         /* header 內部底部留一點空間 */
+  margin-bottom: 20px;          /* header 與第一個對話泡泡的距離，覺得不夠可以再加大 */
+
+  border-bottom: 1px solid #f2f2f7;
+}
         .avatar-container { width: 85px; height: 85px; border-radius: 50%; overflow: hidden; margin: 0 auto 10px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; }
         .header-avatar { width: 100%; height: 100%; object-fit: cover; }
         .header-name { font-size: 20px; font-weight: bold; margin: 0; }
         .header-date { font-size: 12px; color: var(--text-gray); margin-top: 2px; }
         .nick-label { font-size: 11px; margin-top: 5px; color: #333; }
         .header-nick { font-size: 18px; font-weight: bold; color: var(--nick-green); margin-top: 0; }
-        .status-corner { position: absolute; right: 0; bottom: 5px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 11px; color: var(--text-gray); }
+.status-corner {
+  position: absolute;
+  right: 0;
+  bottom: 20px;                 /* 往上抓一點，大概對在暱稱那一行附近 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-gray);
+}
 
-        /* 對話列表 */
-        .chat-list { display: flex; flex-direction: column; gap: 8px; }
+/* 不要讓「🎫 3 枚」「⏱️ 30 秒」被拆行 */
+.status-corner > div {
+  white-space: nowrap;
+}
+
+/* 對話列表 */
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
         .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; }
+/* 對話框刪除按鈕：預設隱藏，長按氣泡才顯示 */
+.chat-delete {
+  position: absolute;
+  top: -4px;
+  right: -20px;
+  font-size: 16px;
+  opacity: 0.45;
+  cursor: pointer;
+  display: none;
+}
+.item-fan .chat-delete {
+  left: -20px;
+  right: auto;
+}
+.chat-delete:hover {
+  opacity: 0.8;
+}
+
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
@@ -115,7 +162,7 @@
         background:
             linear-gradient(#f7f7f7, #f7f7f7) padding-box,
             linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
-        border: 1px solid transparent;
+        border: 2px solid transparent;
 }
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
@@ -228,33 +275,6 @@ body.in-edit .fab-add {
     flex: 1;
     justify-content: flex-end;
   }
-}
-/* ===== 截圖模式：讓對話框更清楚 ===== */
-body.screenshot-mode .bubble {
-  /* 顏色加深一點（仍然保留漸層） */
-  filter: saturate(1.15) contrast(1.2);
-
-  /* 加一點邊框，避免太淡 */
-  border: 1px solid rgba(0, 0, 0, 0.12);
-
-  /* 陰影加重，讓氣泡浮出來 */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
-}
-
-/* 字體微微加粗，手機截圖更清楚 */
-body.screenshot-mode .bubble {
-  font-weight: 500;
-}
-body.screenshot-mode .bubble {
-  background-blend-mode: multiply;
-}
-body.screenshot-mode .bubble {
-  filter: saturate(1.3) contrast(1.3);
-}
-/* 如果你有「我的 / 成員」不同氣泡，也一樣吃得到 */
-body.screenshot-mode .bubble.me,
-body.screenshot-mode .bubble.member {
-  filter: saturate(1.25) contrast(1.2);
 }
 
 </style>
@@ -380,48 +400,27 @@ body.screenshot-mode .bubble.member {
     </div>
 
     <!-- 對話框漸層顏色：從櫻坂46 應援色 15 色中選 2 個 -->
+    <!-- 對話框漸層顏色：改成調色盤自選 -->
     <div style="margin-top:12px;">
         <div style="font-size:13px; margin-bottom:6px; color:#666;">對話框漸層顏色</div>
-        <div style="display:flex; gap:8px;">
-            <!-- 起點色 -->
-            <select id="bubble-color-1" onchange="updateBubbleColors()"
-                    style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
-                <option value="#ffffff">1 WHITE</option>
-                <option value="#ffb7c5" selected>2 SAKURA PINK</option>
-                <option value="#00dd33">3 GREEN</option>
-                <option value="#ffe600">4 YELLOW</option>
-                <option value="#ff3333">5 RED</option>
-                <option value="#66ccff">6 PASTEL BLUE</option>
-                <option value="#a020f0">7 PURPLE</option>
-                <option value="#ff66cc">8 PINK</option>
-                <option value="#00c78c">9 EMERALD GREEN</option>
-                <option value="#99ff66">10 LIGHT GREEN</option>
-                <option value="#8a2be2">11 VIOLET</option>
-                <option value="#ccffcc">12 PEARL GREEN</option>
-                <option value="#ff1493">13 PASSION PINK</option>
-                <option value="#ffa500">14 ORANGE</option>
-                <option value="#0066ff">15 BLUE</option>
-            </select>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <div style="flex:1;">
+                <div style="font-size:12px; color:#999; margin-bottom:4px;">起點色</div>
+                <input type="color"
+                       id="bubble-color-1"
+                       value="#ffb7c5"
+                       onchange="updateBubbleColors()"
+                       style="width:100%; height:36px; padding:0; border-radius:8px; border:1px solid #ddd;">
+            </div>
 
-            <!-- 終點色 -->
-            <select id="bubble-color-2" onchange="updateBubbleColors()"
-                    style="flex:1; padding:8px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
-                <option value="#ffffff" selected>1 WHITE</option>
-                <option value="#ffb7c5">2 SAKURA PINK</option>
-                <option value="#00dd33">3 GREEN</option>
-                <option value="#ffe600">4 YELLOW</option>
-                <option value="#ff3333">5 RED</option>
-                <option value="#66ccff">6 PASTEL BLUE</option>
-                <option value="#a020f0">7 PURPLE</option>
-                <option value="#ff66cc">8 PINK</option>
-                <option value="#00c78c">9 EMERALD GREEN</option>
-                <option value="#99ff66">10 LIGHT GREEN</option>
-                <option value="#8a2be2">11 VIOLET</option>
-                <option value="#ccffcc">12 PEARL GREEN</option>
-                <option value="#ff1493">13 PASSION PINK</option>
-                <option value="#ffa500">14 ORANGE</option>
-                <option value="#0066ff">15 BLUE</option>
-            </select>
+            <div style="flex:1;">
+                <div style="font-size:12px; color:#999; margin-bottom:4px;">終點色</div>
+                <input type="color"
+                       id="bubble-color-2"
+                       value="#ffffff"
+                       onchange="updateBubbleColors()"
+                       style="width:100%; height:36px; padding:0; border-radius:8px; border:1px solid #ddd;">
+            </div>
         </div>
     </div>
 
@@ -748,27 +747,17 @@ const setVal = (id, val) => {
 
     // 載入完整的對話清單
     document.getElementById('chat-list').innerHTML = r.chats || "";
-    
+    initChatLongPress();
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
-    // 顏色：如果舊資料沒有，就用預設值
-    const sel1 = document.getElementById('bubble-color-1');
-    const sel2 = document.getElementById('bubble-color-2');
-    if (sel1 && sel2) 
-    // 如果這筆有自己的顏色就用它，沒有就維持目前選單的值
-    if (r.bubbleC1) sel1.value = r.bubbleC1;
-    if (r.bubbleC2) sel2.value = r.bubbleC2;
-    updateBubbleColors(true);
-    // 套到畫面上的聊天區
-    const chatArea = document.getElementById('chat-area'); // 同上，換成你真正的 id
-    if (chatArea) {
-        chatArea.style.setProperty('--bubble-c1', c1);
-        chatArea.style.setProperty('--bubble-c2', c2);
-
+   const c1Input = document.getElementById('bubble-color-1');
+    const c2Input = document.getElementById('bubble-color-2');
+    if (c1Input && c2Input) {
+        c1Input.value = r.bubbleC1 || '#ffb7c5';
+        c2Input.value = r.bubbleC2 || '#ffffff';
+        updateBubbleColors(true);  // fromLoad = true → 不另外存檔
     }
-
-updateBubbleStyle();
 
     document.getElementById('prev-img-member').src = mAv || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
     syncChatAvatars();
@@ -987,8 +976,12 @@ function importBackup(files) {
 
     // 直接抓取整個對話容器的 HTML，確保不限行數完整存檔
     const chatContent = document.getElementById('chat-list').innerHTML;
+    const c1Input = document.getElementById('bubble-color-1');
+    const c2Input = document.getElementById('bubble-color-2');
+    const bubbleC1 = c1Input ? c1Input.value : (db[idx].bubbleC1 || '#ffb7c5');
+    const bubbleC2 = c2Input ? c2Input.value : (db[idx].bubbleC2 || '#ffffff');
 
-        db[idx] = {
+       db[idx] = {
         ...db[idx],
         name: getVal('input-name'),
         single: getVal('input-single'),
@@ -1001,9 +994,10 @@ function importBackup(files) {
         chats: chatContent, // 存檔所有對話
         mAv: mAv,
         fAv: fAv,
-
-        // 🌈 對話泡泡的漸層顏色（成員 / 自己）
+        bubbleC1,
+        bubbleC2
     };
+
 
     saveDB(db);
     
@@ -1069,27 +1063,46 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDatePlaceholder();
 });
 
-    function addChat(type) {
-        const msg = document.getElementById('input-msg').value; 
-        if(!msg) return;
-        const list = document.getElementById('chat-list');
-        const div = document.createElement('div');
-        // 修改後的 addChat 邏輯片段
-if(type === 'other') {
-    div.className = 'chat-item item-other';
-    // 加入 data-html2canvas-ignore 屬性，截圖時會自動隱藏
-    div.innerHTML = `<span data-html2canvas-ignore style="position:absolute; right:10px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span><div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
-} else {
-    const isC = (type === lastT);
-    div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
-    const avatar = type === 'member' ? mAv : fAv;
-    const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
-    // 同樣在這裡加入 data-html2canvas-ignore
-    div.innerHTML = `<span data-html2canvas-ignore style="position:absolute; top:0; ${type==='member'?'right': 'left'}:-25px; opacity:0.2; cursor:pointer;" onclick="this.parentElement.remove()">✕</span>${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}<div class="bubble">${msg.replace(/\n/g,'<br>')}</div>`;
-}
-        list.appendChild(div); lastT = type; document.getElementById('input-msg').value = '';
-        autoSave();
+function addChat(type) {
+    const msg = document.getElementById('input-msg').value;
+    if (!msg) return;
+
+    const list = document.getElementById('chat-list');
+    const div = document.createElement('div');
+
+    if (type === 'other') {
+        div.className = 'chat-item item-other';
+        div.innerHTML = `
+            <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
+            <span class="chat-delete"
+                  data-html2canvas-ignore
+                  onclick="this.parentElement.remove()">✕</span>
+        `;
+    } else {
+        const isC = (type === lastT);
+        div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
+
+        const avatar = (type === 'member') ? mAv : fAv;
+        const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+
+        div.innerHTML = `
+            ${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}
+            <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
+            <span class="chat-delete"
+                  data-html2canvas-ignore
+                  onclick="this.parentElement.remove()">✕</span>
+        `;
     }
+
+    list.appendChild(div);
+    lastT = type;
+    document.getElementById('input-msg').value = '';
+
+    // 新增的對話也掛上長按事件
+    setupBubbleLongPress(div);
+
+    autoSave();
+}
 
     function triggerFile(t) { uploadTarget = t; document.getElementById('real-file-input').click(); }
     function handleFile(i) {
@@ -1202,6 +1215,43 @@ if(type === 'other') {
         }
     });
 
+// 把「長按氣泡」的事件掛上去
+function setupBubbleLongPress(chatItem) {
+    const bubble = chatItem.querySelector('.bubble');
+    const delBtn = chatItem.querySelector('.chat-delete');
+    if (!bubble || !delBtn) return;
+
+    let pressTimer = null;
+
+    const start = (e) => {
+        // 避免滑動誤觸
+        if (pressTimer !== null) return;
+        pressTimer = setTimeout(() => {
+            delBtn.style.display = 'block'; // 長按 600ms 後顯示 X
+        }, 600);
+    };
+
+    const cancel = () => {
+        if (pressTimer !== null) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+        }
+    };
+
+    bubble.addEventListener('mousedown', start);
+    bubble.addEventListener('touchstart', start);
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev => {
+        bubble.addEventListener(ev, cancel);
+    });
+}
+
+// 重新載入舊對話時，把每一個 chat-item 都掛上長按
+function initChatLongPress() {
+    document
+        .querySelectorAll('#chat-list .chat-item')
+        .forEach(setupBubbleLongPress);
+}
+
 
     function confirmCrop() {
         const canvas = document.createElement('canvas');
@@ -1240,22 +1290,28 @@ ctx.drawImage(
     function closeCrop() { document.getElementById('crop-modal').style.display = 'none'; }
     function openDrawer(id) { document.getElementById('overlay').style.display = 'block'; document.getElementById(id).classList.add('active'); }
     function closeAllDrawers() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.drawer').forEach(d => d.classList.remove('active')); }
+
 function updateBubbleColors(fromLoad) {
-    var sel1 = document.getElementById('bubble-color-1');
-    var sel2 = document.getElementById('bubble-color-2');
-    if (!sel1 || !sel2) return;
+    var c1Input = document.getElementById('bubble-color-1');
+    var c2Input = document.getElementById('bubble-color-2');
+    if (!c1Input || !c2Input) return;
 
-    var c1 = sel1.value || '#ffb7c5';
-    var c2 = sel2.value || '#ffffff';
+    var c1 = c1Input.value || '#ffb7c5';
+    var c2 = c2Input.value || '#ffffff';
 
-    // 套到 CSS 變數，讓 .bubble 用 var(--bubble-c1/2)
+    // 套到全域 CSS 變數，.bubble 用 var(--bubble-c1 / --bubble-c2)
     document.documentElement.style.setProperty('--bubble-c1', c1);
     document.documentElement.style.setProperty('--bubble-c2', c2);
 
-    if (!fromLoad) {
-        try {
-            localStorage.setItem('bubbleColors', JSON.stringify({ c1, c2 }));
-        } catch (e) {}
+    // 目前這一筆紀錄也一起更新
+    if (currentRecordId && !fromLoad) {
+        const db = getDB();
+        const idx = db.findIndex(r => r.id === currentRecordId);
+        if (idx !== -1) {
+            db[idx].bubbleC1 = c1;
+            db[idx].bubbleC2 = c2;
+            saveDB(db);
+        }
     }
 }
 
@@ -1275,22 +1331,51 @@ function updateBubbleColors(fromLoad) {
         updateBubbleColors(true);
     }
 
- function takeShot() {
-  const target = document.getElementById('capture-area');
+function takeShot() {
+  const node = document.getElementById('capture-area');
+  if (!node) return;
 
-  document.body.classList.add('screenshot-mode');
+  // 讓輸出圖比畫面高解析度（2 倍）
+  const scale = 2;  // 想更清楚可以改 3
 
-  setTimeout(() => {
-    html2canvas(target).then(canvas => {
+  const width  = node.offsetWidth;
+  const height = node.offsetHeight;
+
+  // 等字型載完，避免字擠在一起或行高怪怪的
+  const waitFonts = (document.fonts && document.fonts.ready)
+    ? document.fonts.ready
+    : Promise.resolve();
+
+  waitFonts.then(function () {
+    domtoimage.toPng(node, {
+      width:  width * scale,
+      height: height * scale,
+      bgcolor: '#ffffff',
+
+      // 只影響「複製出來的那份」，畫面本身不會被放大
+      style: {
+        transform: 'scale(' + scale + ')',
+        transformOrigin: 'top left',
+        width:  width + 'px',
+        height: height + 'px'
+      },
+
+      // 把有 data-html2canvas-ignore 的東西都排除（例如刪除用的 X）
+      filter: function (el) {
+        if (!el.getAttribute) return true;
+        return !el.getAttribute('data-html2canvas-ignore');
+      }
+    }).then(function (dataUrl) {
       const link = document.createElement('a');
       link.download = 'miguri.png';
-      link.href = canvas.toDataURL();
+      link.href = dataUrl;
       link.click();
-
-      document.body.classList.remove('screenshot-mode');
+    }).catch(function (err) {
+      console.error('截圖失敗：', err);
     });
-  }, 50);
+  });
 }
+
     document.addEventListener('DOMContentLoaded', function () {
     initIndexedDB();     // 原本就有的
     renderRecordList();  // 如果你本來有用到
