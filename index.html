@@ -109,39 +109,29 @@
 .chat-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
         .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; }
-/* 對話框刪除按鈕：預設隱藏，長按氣泡才顯示 */
-.chat-delete {
-  position: absolute;
-  top: -4px;
-  right: -20px;
-  font-size: 16px;
-  opacity: 0.45;
-  cursor: pointer;
-  display: none;
-}
-.item-fan .chat-delete {
-  left: -20px;
-  right: auto;
-}
-.chat-delete:hover {
-  opacity: 0.8;
-}
-
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .item-member .chat-avatar { margin-right: 12px; }
         .item-fan .chat-avatar { margin-left: 12px; }
-        .bubble { padding: 11px 16px; font-size: 15px; border-radius: 18px; line-height: 1.4; border: 1px solid transparent; }
+        .bubble { padding: 7px 11px; font-size: 14px; border-radius: 16px; line-height: 1.3; border: 1px solid transparent; }
        :root {
   --member-c1: #ffe9f3;
   --member-c2: #ffffff;
   --fan-c1: #e9f0ff;
   --fan-c2: #f4f4f4;
 }
+
+/* 對話泡泡：字太長時換行，而且不要拉太寬 */
+.chat-item .bubble {
+  max-width: 60%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
+  overflow-wrap: break-word; /* 避免英文或長字串超出 */
+  word-break: break-word;
+}
+
 
 .item-member .bubble {
         padding: 11px 16px;
@@ -164,6 +154,40 @@
             linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
         border: 2px solid transparent;
 }
+
+/* 對話長按的選單（編輯 / 刪除） */
+.chat-menu {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  display: none;
+  gap: 8px;
+  z-index: 999;
+}
+
+.chat-menu button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chat-menu button:first-child {
+  background: #f4f4f6;         /* 編輯 */
+}
+
+.chat-menu button:last-child {
+  background: #ffecec;         /* 刪除 */
+  color: #c0392b;
+}
+
+
         .no-avatar { margin-left: 57px; }
         .item-fan.no-avatar { margin-right: 57px; margin-left: 0; }
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
@@ -746,8 +770,14 @@ const setVal = (id, val) => {
     setVal('input-seconds', r.seconds);
 
     // 載入完整的對話清單
-    document.getElementById('chat-list').innerHTML = r.chats || "";
-    initChatLongPress();
+const chatListEl = document.getElementById('chat-list');
+chatListEl.innerHTML = r.chats || "";
+
+// 🔹 清掉舊版本留下的 X 按鈕
+chatListEl.querySelectorAll('.chat-delete').forEach(el => el.remove());
+
+// 重新掛上長按事件
+initChatLongPress();
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
@@ -1074,23 +1104,19 @@ function addChat(type) {
         div.className = 'chat-item item-other';
         div.innerHTML = `
             <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
-            <span class="chat-delete"
-                  data-html2canvas-ignore
-                  onclick="this.parentElement.remove()">✕</span>
         `;
     } else {
         const isC = (type === lastT);
         div.className = `chat-item item-${type} ${isC ? 'no-avatar' : ''}`;
 
         const avatar = (type === 'member') ? mAv : fAv;
-        const finalAvatar = avatar || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
+        const finalAvatar =
+          avatar ||
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
         div.innerHTML = `
             ${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}
             <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
-            <span class="chat-delete"
-                  data-html2canvas-ignore
-                  onclick="this.parentElement.remove()">✕</span>
         `;
     }
 
@@ -1215,20 +1241,57 @@ function addChat(type) {
         }
     });
 
-// 把「長按氣泡」的事件掛上去
+let chatMenuTarget = null;   // 目前長按的是哪一個 chat-item
+let menuJustOpened = false;  // 避免長按放手那一下就關掉
+
+function openChatMenu(chatItem, rect) {
+    chatMenuTarget = chatItem;
+    const menu = document.getElementById('chat-menu');
+    if (!menu) return;
+
+    // 讓選單出現在「該氣泡底下，置中」
+    if (rect) {
+        const top = rect.bottom + 6;                  // 氣泡底下再往下 6px
+        const centerX = rect.left + rect.width / 2;   // 氣泡的水平中心
+
+        menu.style.top = top + 'px';
+        menu.style.left = centerX + 'px';
+        menu.style.bottom = 'auto';
+        menu.style.transform = 'translateX(-50%)';
+    }
+
+    menu.style.display = 'flex';
+    menuJustOpened = true;   // 第一個 click 先忽略
+}
+
+function closeChatMenu() {
+    const menu = document.getElementById('chat-menu');
+    if (menu) {
+        menu.style.display = 'none';
+        // 回到預設位置（避免下次沒 rect 時還留舊座標）
+        menu.style.top = 'auto';
+        menu.style.left = '50%';
+        menu.style.bottom = '20px';
+        menu.style.transform = 'translateX(-50%)';
+    }
+    chatMenuTarget = null;
+    menuJustOpened = false;
+}
+
+// 長按：開啟選單
 function setupBubbleLongPress(chatItem) {
     const bubble = chatItem.querySelector('.bubble');
-    const delBtn = chatItem.querySelector('.chat-delete');
-    if (!bubble || !delBtn) return;
+    if (!bubble) return;
 
     let pressTimer = null;
 
     const start = (e) => {
-        // 避免滑動誤觸
         if (pressTimer !== null) return;
         pressTimer = setTimeout(() => {
-            delBtn.style.display = 'block'; // 長按 600ms 後顯示 X
-        }, 600);
+            const rect = bubble.getBoundingClientRect();
+            openChatMenu(chatItem, rect);
+            pressTimer = null;
+        }, 600);   // 長按 600ms
     };
 
     const cancel = () => {
@@ -1244,6 +1307,64 @@ function setupBubbleLongPress(chatItem) {
         bubble.addEventListener(ev, cancel);
     });
 }
+
+// 重新載入舊對話時，把每一個 chat-item 都掛上長按
+function initChatLongPress() {
+    document
+        .querySelectorAll('#chat-list .chat-item')
+        .forEach(setupBubbleLongPress);
+}
+
+// 點畫面其他地方就關掉選單
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('chat-menu');
+    if (!menu || menu.style.display !== 'flex') return;
+
+    // 長按放手那一下會觸發第一次 click，先略過
+    if (menuJustOpened) {
+        menuJustOpened = false;
+        return;
+    }
+
+    // 點在選單裡就不要關（交給按鈕自己關）
+    if (menu.contains(e.target)) return;
+
+    // 點在別的地方才關
+    closeChatMenu();
+});
+
+function editCurrentChat() {
+    if (!chatMenuTarget) return;
+    const bubble = chatMenuTarget.querySelector('.bubble');
+    if (!bubble) {
+        closeChatMenu();
+        return;
+    }
+
+    // 把 <br> 換回 \n，讓文字好編輯
+    const oldText = bubble.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+    const newText = prompt('編輯這則對話：', oldText);
+
+    if (newText !== null) {
+        bubble.innerHTML = escapeHTML(newText).replace(/\n/g, '<br>');
+        autoSave();
+    }
+
+    closeChatMenu();
+}
+
+function deleteCurrentChat() {
+    if (!chatMenuTarget) return;
+    if (!confirm('要刪除這則對話嗎？')) {
+        closeChatMenu();
+        return;
+    }
+
+    chatMenuTarget.remove();
+    autoSave();
+    closeChatMenu();
+}
+
 
 // 重新載入舊對話時，把每一個 chat-item 都掛上長按
 function initChatLongPress() {
@@ -1388,5 +1509,12 @@ function takeShot() {
         onclick="createNewRecord()"
         data-html2canvas-ignore>
   ＋
-</button></body>
+</button>
+<!-- 氣泡長按選單：編輯 / 刪除 -->
+<div id="chat-menu" class="chat-menu">
+  <button type="button" onclick="editCurrentChat()">✏️ 編輯</button>
+  <button type="button" onclick="deleteCurrentChat()">🗑 刪除</button>
+</div>
+
+</body>
 </html>
