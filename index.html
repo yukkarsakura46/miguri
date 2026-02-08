@@ -111,7 +111,7 @@
   flex-direction: column;
   gap: 6px;
 }
-        .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; gap: 4px; }
+        .chat-item { display: flex; align-items: flex-start; width: 100%; position: relative; gap: 4px; }
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
@@ -127,7 +127,7 @@
 
 /* 對話泡泡：字太長時換行，而且不要拉太寬 */
 .chat-item .bubble {
-  max-width: 58%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
+  max-width: calc(100% - 56px);            /* 🔹每個泡泡最多占這一行 60% 寬 */
   overflow-wrap: break-word; /* 避免英文或長字串超出 */
   word-break: break-word;
 }
@@ -1133,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function addChat(type) {
-    const msg = document.getElementById('input-msg').value;
+    const msg = document.getElementById('input-msg').value.replace(/\s+$/,'');
     if (!msg) return;
 
     const list = document.getElementById('chat-list');
