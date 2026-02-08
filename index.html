@@ -109,15 +109,15 @@
 .chat-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
-        .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; }
+        .chat-item { display: flex; align-items: flex-start; max-width: 90%; position: relative; gap: 4px; }
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .item-member .chat-avatar { margin-right: 12px; }
         .item-fan .chat-avatar { margin-left: 12px; }
-        .bubble { padding: 7px 11px; font-size: 14px; border-radius: 16px; line-height: 1.3; border: 1px solid transparent; }
+        .bubble { padding: 6px 10px; font-size: 13px; border-radius: 14px; line-height: 1.28; border: 1px solid transparent; }
        :root {
   --member-c1: #ffe9f3;
   --member-c2: #ffffff;
@@ -127,7 +127,7 @@
 
 /* 對話泡泡：字太長時換行，而且不要拉太寬 */
 .chat-item .bubble {
-  max-width: 80%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
+  max-width: 58%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
   overflow-wrap: break-word; /* 避免英文或長字串超出 */
   word-break: break-word;
 }
