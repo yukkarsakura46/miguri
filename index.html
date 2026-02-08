@@ -127,7 +127,7 @@
 
 /* 對話泡泡：字太長時換行，而且不要拉太寬 */
 .chat-item .bubble {
-  max-width: 60%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
+  max-width: 80%;            /* 🔹每個泡泡最多占這一行 60% 寬 */
   overflow-wrap: break-word; /* 避免英文或長字串超出 */
   word-break: break-word;
 }
@@ -339,8 +339,19 @@ body.in-edit .fab-add {
            onchange="importBackup(this.files)">
   </div>
 </div>
+<div class="main-view">
+  <!-- 🔽 新增：排序選單（就在 record-list 上面） -->
+  <div style="display:flex; justify-content:flex-end; margin:8px 0;">
+    <select id="sort-select" onchange="renderRecordList()" style="font-size:13px;">
+      <option value="date-desc">📅 日期（新 → 舊）</option>
+      <option value="date-asc">📅 日期（舊 → 新）</option>
+    </select>
+  </div>
 
-  <div class="record-list" id="record-list"></div>
+  <div id="record-list"></div>
+
+</div>
+
 </div>
 
 <div id="edit-view" class="view-section">
@@ -612,8 +623,11 @@ function syncChatAvatars() {
 
 function renderRecordList() {
     document.body.classList.remove('in-edit');
+
     const db = getDB();
     const container = document.getElementById('record-list');
+    if (!container) return;
+
     container.innerHTML = '';
 
     if (!db || db.length === 0) {
@@ -622,8 +636,32 @@ function renderRecordList() {
         return;
     }
 
-    // 讓最新的一筆在最上面
-    [...db].reverse().forEach(r => {
+    // 讀取排序選項
+    const sortSelect = document.getElementById('sort-select');
+    const sortMode = sortSelect ? sortSelect.value : 'date-desc';
+
+    // 先複製一份資料避免直接改到 db
+    const records = [...db];
+
+    // 用日期排序（支援「yyyy-mm-dd」或「2025年1月10日」）
+    records.sort((a, b) => {
+        const daStr = normalizeDateForInput(a.date || "");
+        const dbStr = normalizeDateForInput(b.date || "");
+
+        const da = daStr ? Date.parse(daStr) : 0;
+        const dbt = dbStr ? Date.parse(dbStr) : 0;
+
+        if (sortMode === 'date-asc') {
+            // 舊 → 新
+            return da - dbt;
+        } else {
+            // 新 → 舊（預設）
+            return dbt - da;
+        }
+    });
+
+    // 依照排序好的 records 畫出卡片
+    records.forEach(r => {
         const card = document.createElement('div');
         card.className = 'record-card';
 
@@ -634,7 +672,6 @@ function renderRecordList() {
         const info = document.createElement('div');
         info.className = 'record-info';
 
-        // 標題：成員名字 + （可選單曲）
         const title = document.createElement('div');
         title.className = 'r-title';
         title.innerHTML =
@@ -643,7 +680,6 @@ function renderRecordList() {
                 ? ` <span style="font-size:0.8rem; color:var(--sakura-pink);">[${r.single}]</span>`
                 : '');
 
-        // 第二行：日期 | 類型 | 部數
         const meta = document.createElement('div');
         meta.className = 'r-meta';
         const parts = [];
@@ -655,32 +691,34 @@ function renderRecordList() {
         info.appendChild(title);
         info.appendChild(meta);
 
-        // 右邊操作區：★ 選取 + 🗑 刪除
+        // 右邊：★ 勾選 / 🗑 刪除
         const actions = document.createElement('div');
         actions.className = 'card-actions';
 
-        // ★ 勾選要匯出的紀錄
         const markBtn = document.createElement('button');
         markBtn.type = 'button';
         markBtn.className = 'btn-mark';
         markBtn.textContent = r.selected ? '★' : '☆';
         markBtn.title = '勾選要匯出的紀錄';
         markBtn.onclick = (e) => {
-            e.stopPropagation();            // 不要同時觸發 card.onclick
-            r.selected = !r.selected;       // 切換選取狀態
-            saveDB(db);                     // 存回資料庫（你原本就有的函式）
-            renderRecordList();             // 重新渲染，星星立即更新
+            e.stopPropagation();
+            // 到真正的 db 裡找到同一筆資料，切換 selected
+            const real = db.find(item => item.id === r.id);
+            if (real) {
+                real.selected = !real.selected;
+                saveDB(db);
+                renderRecordList();
+            }
         };
 
-        // 🗑 刪除
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'btn-del';
         delBtn.innerHTML = '🗑️';
         delBtn.title = '刪除這筆紀錄';
         delBtn.onclick = (e) => {
-            e.stopPropagation();            // 一樣避免點到卡片
-            deleteRecord(r.id);             // 裡面已經有 confirm 就好
+            e.stopPropagation();
+            deleteRecord(r.id);
         };
 
         actions.appendChild(markBtn);
@@ -842,9 +880,9 @@ function exportToNotionCSV() {
     const all = getDB();
     const db = all.filter(r => r.selected);
 
-   if (!db.length) {
-    alert("請先在列表用 ★ 勾選要匯出的紀錄");
-    return;
+    if (!db.length) {
+        alert("請先在列表用 ★ 勾選要匯出的紀錄");
+        return;
     }
 
     const header = [
@@ -860,6 +898,7 @@ function exportToNotionCSV() {
     const rows = [];
     rows.push(header.map(csvEscape).join(","));
 
+    // 每一筆記錄一行
     db.forEach(r => {
         const dialog = chatsHTMLToPlainText(r.chats || "");
 
