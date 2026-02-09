@@ -109,7 +109,7 @@
 .chat-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
         .chat-item { display: flex; align-items: flex-start; width: 100%; position: relative; gap: 4px; }
         .item-member { align-self: flex-start; }
@@ -117,47 +117,6 @@
         .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
         .item-member .chat-avatar { margin-right: 12px; }
         .item-fan .chat-avatar { margin-left: 12px; }
-        .bubble { padding: 6px 10px; font-size: 13px; border-radius: 14px; line-height: 1.28; border: 1px solid transparent; }
-       :root {
-  --member-c1: #ffe9f3;
-  --member-c2: #ffffff;
-  --fan-c1: #e9f0ff;
-  --fan-c2: #f4f4f4;
-}
-
-/* 對話泡泡：字太長時換行，而且不要拉太寬 */
-.chat-item .bubble {
-  max-width: 65%;            
-  overflow-wrap: break-word; /* 避免英文或長字串超出 */
-  word-break: break-word;
-}
-
-/* 中間的「其他」對話：可以用更寬，晚一點再換行 */
-.chat-item.item-other .bubble {
-  max-width: 80%;          /* 或 80%、90% 都可以，看你喜好 */
-}
-
-.item-member .bubble {
-        padding: 11px 16px;
-        border-radius: 18px;
-        border-top-left-radius: 4px;
-        background:
-            /* 內部底色 */
-            linear-gradient(#ffffff, #ffffff) padding-box,
-            /* 外圈漸層邊框 */
-            linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
-        border: 2px solid transparent;
-}
-
-.item-fan .bubble {
-        padding: 11px 16px;
-        border-radius: 18px;
-        border-top-right-radius: 4px;
-        background:
-            linear-gradient(#f7f7f7, #f7f7f7) padding-box,
-            linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
-        border: 2px solid transparent;
-}
 
 /* 對話長按的選單（編輯 / 刪除） */
 .chat-menu {
@@ -303,6 +262,110 @@ body.in-edit .fab-add {
     flex: 1;
     justify-content: flex-end;
   }
+}
+
+.bubble {
+  position: relative;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.28;
+  border-radius: 20px;
+  overflow: visible;
+
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
+  border: 2px solid transparent;
+}
+
+.item-fan .arrow-out {
+  position: absolute;
+  top: 12px;                 /* 垂直位置，可微調 */
+  right: -10px;
+
+  width: 0;
+  height: 0;
+
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #f06292;
+}
+
+.item-fan .arrow-in {
+  position: absolute;
+  top: 13px;
+  right: -8px;
+
+  width: 0;
+  height: 0;
+
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 9px solid #f7f7f7;   /* 內部底色 */
+}
+
+.item-member .arrow-out {
+  position: absolute;
+  top: 12px;
+  left: -10px;
+
+  width: 0;
+  height: 0;
+
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #4caf50;
+}
+
+.item-member .arrow-in {
+  position: absolute;
+  top: 13px;
+  left: -8px;
+
+  width: 0;
+  height: 0;
+
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 9px solid #ffffff;
+}
+
+
+/* 成員端：白底 + 漸層邊框 */
+.item-member .bubble {
+  padding: 11px 16px;
+  border-radius: 18px;     /* 🔹不要再改 top-left 喔 */
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
+  border: 2px solid transparent;
+}
+
+/* 自己端：淺灰底 + 漸層邊框 */
+.item-fan .bubble {
+  padding: 11px 16px;
+  border-radius: 18px;     /* 🔹不要再改 top-right */
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
+  border: 2px solid transparent;
+}
+
+/* 泡泡最大寬度：左右一樣，中間再寬一點 */
+.chat-item .bubble {
+  max-width: 65%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.chat-item.item-other .bubble {
+  max-width: 80%;
+}
+
+/* 單行訊息 → 比較扁 */
+.bubble:not(:has(br)) {
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 </style>
@@ -811,15 +874,18 @@ const setVal = (id, val) => {
     setVal('input-cards', r.cards);
     setVal('input-seconds', r.seconds);
 
-    // 載入完整的對話清單
 const chatListEl = document.getElementById('chat-list');
 chatListEl.innerHTML = r.chats || "";
 
 // 🔹 清掉舊版本留下的 X 按鈕
 chatListEl.querySelectorAll('.chat-delete').forEach(el => el.remove());
 
+// 🔹 幫舊氣泡補上 arrow-out / arrow-in
+ensureBubbleArrows();
+
 // 重新掛上長按事件
 initChatLongPress();
+
     // 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
@@ -1144,9 +1210,12 @@ function addChat(type) {
     const div = document.createElement('div');
 
     if (type === 'other') {
+        // 中間「其他」訊息：不要頭像、也不要尾巴
         div.className = 'chat-item item-other';
         div.innerHTML = `
-            <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
+            <div class="bubble">
+                ${msg.replace(/\n/g,'<br>')}
+            </div>
         `;
     } else {
         const isC = (type === lastT);
@@ -1157,9 +1226,14 @@ function addChat(type) {
           avatar ||
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
+        // 🔸 這裡重點：氣泡裡一開始就放進 arrow-out / arrow-in 兩個 span
         div.innerHTML = `
             ${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}
-            <div class="bubble">${msg.replace(/\n/g, '<br>')}</div>
+            <div class="bubble">
+                <span class="arrow arrow-out"></span>
+                <span class="arrow arrow-in"></span>
+                ${msg.replace(/\n/g, '<br>')}
+            </div>
         `;
     }
 
@@ -1350,6 +1424,28 @@ function setupBubbleLongPress(chatItem) {
         bubble.addEventListener(ev, cancel);
     });
 }
+
+// 確保每顆成員／自己的氣泡裡，都有 arrow-out / arrow-in 兩個 span
+function ensureBubbleArrows() {
+    const chatListEl = document.getElementById('chat-list');
+    if (!chatListEl) return;
+
+    chatListEl.querySelectorAll('.chat-item.item-member .bubble, .chat-item.item-fan .bubble')
+        .forEach(bubble => {
+            // 已經有就不要重複加
+            if (bubble.querySelector('.arrow-out') || bubble.querySelector('.arrow-in')) return;
+
+            const out = document.createElement('span');
+            out.className = 'arrow arrow-out';
+            const inn = document.createElement('span');
+            inn.className = 'arrow arrow-in';
+
+            // 插在文字前面
+            bubble.insertBefore(inn, bubble.firstChild);
+            bubble.insertBefore(out, bubble.firstChild);
+        });
+}
+
 
 // 重新載入舊對話時，把每一個 chat-item 都掛上長按
 function initChatLongPress() {
