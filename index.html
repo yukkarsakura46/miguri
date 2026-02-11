@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sakurazaka46 ミーグリ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@2.9.5/dist/dom-to-image-more.min.js"></script>
 
     <style>
 /* 設定區：兩行兩格 */
@@ -170,6 +169,9 @@
         .drawer-btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
         .drawer-btn-group button { flex: 1; padding: 8px; font-size: 13px; border-radius: 6px; border: 1px solid #eee; background: white; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 450px; background: white; display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #eee; z-index: 300; }
+.bottom-nav button {
+  flex: 1;   /* 兩顆平均吃滿 */
+}
         .nav-btn { background: none; border: none; font-size: 11px; cursor: pointer; color: #666; }
         .back-nav { background: #eee; padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 400; }
@@ -469,7 +471,6 @@ display: inline-block;
     <div class="bottom-nav">
         <button class="nav-btn" onclick="openDrawer('configDrawer')">⚙️設定</button>
         <button class="nav-btn" onclick="openDrawer('chatDrawer')">💬對話</button>
-        <button class="nav-btn" onclick="takeShot()" style="color:var(--sakura-pink); font-weight:bold;">📸截圖</button>
     </div>
 </div>
 
@@ -1618,50 +1619,6 @@ function updateBubbleColors(fromLoad) {
         updateBubbleColors(true);
     }
 
-function takeShot() {
-  const node = document.getElementById('capture-area');
-  if (!node) return;
-
-  // 讓輸出圖比畫面高解析度（2 倍）
-  const scale = 2;  // 想更清楚可以改 3
-
-  const width  = node.offsetWidth;
-  const height = node.offsetHeight;
-
-  // 等字型載完，避免字擠在一起或行高怪怪的
-  const waitFonts = (document.fonts && document.fonts.ready)
-    ? document.fonts.ready
-    : Promise.resolve();
-
-  waitFonts.then(function () {
-    domtoimage.toPng(node, {
-      width:  width * scale,
-      height: height * scale,
-      bgcolor: '#ffffff',
-
-      // 只影響「複製出來的那份」，畫面本身不會被放大
-      style: {
-        transform: 'scale(' + scale + ')',
-        transformOrigin: 'top left',
-        width:  width + 'px',
-        height: height + 'px'
-      },
-
-      // 把有 data-html2canvas-ignore 的東西都排除（例如刪除用的 X）
-      filter: function (el) {
-        if (!el.getAttribute) return true;
-        return !el.getAttribute('data-html2canvas-ignore');
-      }
-    }).then(function (dataUrl) {
-      const link = document.createElement('a');
-      link.download = 'miguri.png';
-      link.href = dataUrl;
-      link.click();
-    }).catch(function (err) {
-      console.error('截圖失敗：', err);
-    });
-  });
-}
 
     document.addEventListener('DOMContentLoaded', function () {
     initIndexedDB();     // 原本就有的
