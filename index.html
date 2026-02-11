@@ -336,7 +336,9 @@ display: inline-block;
   border-top: 0;
 
   margin-right: -6px;
+
 }
+
 
 .item-member .bubble::before {
   content: "";
@@ -712,6 +714,8 @@ function syncChatAvatars() {
         };
     }
 
+
+
 function renderRecordList() {
     document.body.classList.remove('in-edit');
 
@@ -901,15 +905,12 @@ const setVal = (id, val) => {
 const chatListEl = document.getElementById('chat-list');
 chatListEl.innerHTML = r.chats || "";
 
-// 🔹 清掉舊版本留下的 X 按鈕
 chatListEl.querySelectorAll('.chat-delete').forEach(el => el.remove());
-
-// 🔹 幫舊氣泡補上 arrow-out / arrow-in
-ensureBubbleArrows();
 
 // 重新掛上長按事件
 initChatLongPress();
-    // 讀取頭像數據
+    
+// 讀取頭像數據
     mAv = r.mAv || ""; 
     fAv = r.fAv || "";
    const c1Input = document.getElementById('bubble-color-1');
@@ -1249,12 +1250,9 @@ function addChat(type) {
           avatar ||
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
-        // 🔸 這裡重點：氣泡裡一開始就放進 arrow-out / arrow-in 兩個 span
         div.innerHTML = `
             ${!isC ? `<img src="${finalAvatar}" class="chat-avatar">` : ''}
             <div class="bubble">
-                <span class="arrow arrow-out"></span>
-                <span class="arrow arrow-in"></span>
                 ${msg.replace(/\n/g, '<br>')}
             </div>
         `;
@@ -1421,6 +1419,7 @@ function closeChatMenu() {
 // 長按：開啟選單
 function setupBubbleLongPress(chatItem) {
     const bubble = chatItem.querySelector('.bubble');
+
     if (!bubble) return;
 
     let pressTimer = null;
@@ -1504,7 +1503,12 @@ function editCurrentChat() {
     }
 
     // 把 <br> 換回 \n，讓文字好編輯
-    const oldText = bubble.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+    const rawHTML = bubble.innerHTML;
+    const cleanedHTML = rawHTML
+  .replace(/<span class="arrow[^>]*><\/span>/gi, '') // 清掉 <span class="arrow ..."></span>
+  .replace(/^\s+/, '')   // 開頭的空白
+  .replace(/\s+$/, '');  // 結尾的空白
+   const oldText = cleanedHTML.replace(/<br\s*\/?>/gi, '\n');
     const newText = prompt('編輯這則對話：', oldText);
 
     if (newText !== null) {
