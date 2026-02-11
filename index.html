@@ -109,14 +109,14 @@
 .chat-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
-        .chat-item { display: flex; align-items: flex-start; width: 100%; position: relative; gap: 4px; }
+        .chat-item { display: flex; align-items: center; width: 90%; position: relative; }
         .item-member { align-self: flex-start; }
         .item-fan { align-self: flex-end; flex-direction: row-reverse; }
-        .chat-avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .item-member .chat-avatar { margin-right: 12px; }
-        .item-fan .chat-avatar { margin-left: 12px; }
+        .chat-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+        .item-member .chat-avatar { margin-right: 10px; }
+        .item-fan .chat-avatar { margin-left: 10px; }
 
 /* 對話長按的選單（編輯 / 刪除） */
 .chat-menu {
@@ -151,8 +151,8 @@
 }
 
 
-        .no-avatar { margin-left: 61px; }
-        .item-fan.no-avatar { margin-right: 61px; margin-left: 0; }
+        .no-avatar { margin-left: 50px; }
+        .item-fan.no-avatar { margin-right: 50px; margin-left: 0; }
         .item-other { align-self: center; justify-content: center; width: 100%; margin: 8px 0; }
         .item-other .bubble { background: transparent; color: #ced4da; font-size: 12px; text-align: center; border: none; }
 
@@ -265,19 +265,17 @@ body.in-edit .fab-add {
 }
 
 .bubble {
-  padding: 11px 16px;
-  font-size: 15px;
-  border-radius: 18px;       /* 四邊都圓 */
-  line-height: 1.4;
-  border: 1px solid transparent;
+  padding: 4px 10px;
+  font-size: 14px;
+  border-radius: 16px;       /* 四邊都圓 */
+  line-height: 1.35;
+  border: 2px solid transparent;
   position: relative;        /* 🔸 尾巴要抓這個當定位點 */
   overflow: visible;
 }
 
 /* 成員（左邊） */
 .item-member .bubble {
-  padding: 11px 16px;
-  border-radius: 18px;       /* 🔸 把原本的 border-top-left-radius:4px 刪掉 */
   background:
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
@@ -286,15 +284,19 @@ body.in-edit .fab-add {
 
 /* 自己（右邊） */
 .item-fan .bubble {
-  padding: 11px 16px;
-  border-radius: 18px;       /* 🔸 把原本的 border-top-right-radius:4px 刪掉 */
   background:
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(135deg, var(--bubble-c1), var(--bubble-c2)) border-box;
   border: 2px solid transparent;
 }
 
-/* 外三角（邊框） */
+/* 單行訊息 → 再更扁一點 */
+.bubble:not(:has(br)) {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+
 .item-fan .bubble::before {
   content: "";
   position: absolute;
@@ -305,12 +307,12 @@ body.in-edit .fab-add {
   width: 0;
   height: 0;
 
-  border: 14px solid transparent;
+  border: 9px solid transparent;              /* ⬅ 原本 14 → 縮小 */
   border-left-color: var(--bubble-c2);
   border-right: 0;
-  border-top: 0;
+  border-top: 0;                              /* 保留你原本的形狀 */
 
-  margin-right: -14px;
+  margin-right: -9px;                         /* ⬅ 跟 border 對齊 */
 }
 
 /* 內三角（白色） */
@@ -324,12 +326,12 @@ body.in-edit .fab-add {
   width: 0;
   height: 0;
 
-  border: 10px solid transparent;
+  border: 7px solid transparent;               /* ⬅ 原本 10 → 縮小 */
   border-left-color: #ffffff;
   border-right: 0;
   border-top: 0;
 
-  margin-right: -10px;
+  margin-right: -6px;
 }
 
 .item-member .bubble::before {
@@ -342,12 +344,12 @@ body.in-edit .fab-add {
   width: 0;
   height: 0;
 
-  border: 14px solid transparent;
+  border: 9px solid transparent;
   border-right-color: var(--bubble-c1);
   border-left: 0;
   border-top: 0;
 
-  margin-left: -14px;
+  margin-left: -9px;
 }
 
 .item-member .bubble::after {
@@ -356,16 +358,18 @@ body.in-edit .fab-add {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
+
   width: 0;
   height: 0;
 
-  border: 10px solid transparent;        /* 比外層小一圈 → 形成「空心」邊 */
-  border-right-color: #ffffff;           /* 內部改成白色 */
+  border: 7px solid transparent;
+  border-right-color: #ffffff;
   border-left: 0;
   border-top: 0;
 
-  margin-left: -10px;
+  margin-left: -6px;
 }
+
 
 /* 泡泡最大寬度：左右一樣，中間再寬一點 */
 .chat-item .bubble {
